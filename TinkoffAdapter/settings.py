@@ -132,3 +132,33 @@ REST_FRAMEWORK = {
     ),
     
 }
+
+
+# Logging configuration
+# https://docs.djangoproject.com/en/3.1/topics/logging/
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'simple': {
+            'format': '{asctime} {filename} {levelname}: {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'debug.log'),
+            'formatter': 'simple',
+        },
+    },
+    'loggers': {
+        'root': {
+            'handlers': ['file'],
+            'level': 'WARNING',
+            'propagate': True,
+        },
+    },
+}
