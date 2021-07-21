@@ -22,6 +22,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = '8fm!=dl-bwo#k7di)3i3ig-%ghv_n*ajax386b^!=+c7akc+r='
 
+# Tinkoff Investment SANDBOX_TOKEN
+SANDBOX_TOKEN = 't.Cz0mvF5Z-uPelMSg5eTTHTSe06y2E227cjLXqp09J4ZzjdFrsw7Mk1VG6fgiuE_iJWcPzYbNjpvB5LZUkIV92Q'
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -123,15 +126,18 @@ STATIC_URL = '/static/'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication',
+        # 'rest_framework.authentication.SessionAuthentication',
+        # 'rest_framework.authentication.TokenAuthentication',
+        'adapter.authentication.ExpTokenAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-       'rest_framework.permissions.AllowAny',
+        # 'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.IsAuthenticated',
     ),
-    
 }
+
+# Token expirations setting
+TOKEN_EXPIRED_AFTER_SECONDS = 60
 
 
 # Logging configuration
