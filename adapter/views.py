@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 
+# Example view for authentication tests
 class HelloView(APIView):
     permission_classes = [IsAuthenticated,]
 
@@ -15,6 +16,7 @@ class HelloView(APIView):
         return Response(content)
 
 
+# Example view for authentication tests
 class HelloEveryView(APIView):
     permission_classes = [AllowAny,]
 
