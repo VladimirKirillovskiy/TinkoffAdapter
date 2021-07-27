@@ -10,7 +10,6 @@ class MarketDetail(APIView):
     def get(self, request, ticker):
     # регистрируем аккаунт
         client = ti.SyncClient(TOKEN, use_sandbox=True)
-        body = ti.SandboxRegisterRequest.tinkoff()
-        register = client.register_sandbox_account(body)
+        register = client.register_sandbox_account(ti.SandboxRegisterRequest.tinkoff())
         response = client.get_market_search_by_ticker(ticker)
         return Response(response)
