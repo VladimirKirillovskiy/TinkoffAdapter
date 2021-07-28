@@ -1,25 +1,18 @@
-from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import (IsAuthenticated, AllowAny)
-from rest_framework.response import Response
+
+from django.shortcuts import render
 from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import (IsAuthenticated, AllowAny)
+from settings import SANDBOX_TOKEN
+import tinvest as ti
+import json
+ 
 
-
-# Example view for authentication tests
-class HelloView(APIView):
-    permission_classes = [IsAuthenticated,]
-
-    def get(self, request):
-        content = {
-            'message': 'Hello, authorized user!',
-            'username': request.user.username,
-        }
-        return Response(content)
-
-
-# Example view for authentication tests
-class HelloEveryView(APIView):
+class MarketDetail(APIView):
     permission_classes = [AllowAny,]
-
-    def get(self, request):
-        content = {'message': 'Hello, anybody!'}
-        return Response(content)
+    
+    def get(self, request, ticker):
+        client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
+        register = client.register_sandbox_account(ti.SandboxRegisterRequest.tinkoff())
+        response = client.get_market_search_by_ticker(ticker)
+        return Response(json.loads(response.json()))
