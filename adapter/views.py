@@ -3,7 +3,7 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import (IsAuthenticated, AllowAny)
-from settings import SANDBOX_TOKEN
+from TinkoffAdapter.settings import SANDBOX_TOKEN
 import tinvest as ti
 import json
  
