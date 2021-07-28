@@ -1,15 +1,18 @@
+
 from django.shortcuts import render
-import tinvest as ti
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.permissions import (IsAuthenticated, AllowAny)
+from TinkoffAdapter.settings import SANDBOX_TOKEN
+import tinvest as ti
 import json
-TOKEN = 't.Cz0mvF5Z-uPelMSg5eTTHTSe06y2E227cjLXqp09J4ZzjdFrsw7Mk1VG6fgiuE_iJWcPzYbNjpvB5LZUkIV92Q'
  
-# регистрируем аккаунт
+
 class MarketDetail(APIView):
+    permission_classes = [AllowAny,]
+    
     def get(self, request, ticker):
-    # регистрируем аккаунт
-        client = ti.SyncClient(TOKEN, use_sandbox=True)
+        client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
         register = client.register_sandbox_account(ti.SandboxRegisterRequest.tinkoff())
         response = client.get_market_search_by_ticker(ticker)
         return Response(json.loads(response.json()))
