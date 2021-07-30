@@ -1,4 +1,3 @@
-
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -15,4 +14,14 @@ class MarketDetail(APIView):
         client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
         register = client.register_sandbox_account(ti.SandboxRegisterRequest.tinkoff())
         response = client.get_market_search_by_ticker(ticker)
+        return Response(json.loads(response.json()))
+
+
+class MarketAll(APIView):
+    permission_classes = [AllowAny,]
+
+    def get(self, request):
+        client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
+        register = client.register_sandbox_account(ti.SandboxRegisterRequest.tinkoff())
+        response = client.get_market_stocks()
         return Response(json.loads(response.json()))
