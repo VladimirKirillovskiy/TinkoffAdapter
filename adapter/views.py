@@ -5,7 +5,7 @@ from rest_framework.permissions import (IsAuthenticated, AllowAny)
 from TinkoffAdapter.settings import SANDBOX_TOKEN
 import tinvest as ti
 import json
- 
+
 
 class MarketDetail(APIView):
     permission_classes = [AllowAny,]
@@ -14,7 +14,7 @@ class MarketDetail(APIView):
         client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
         register = client.register_sandbox_account(ti.SandboxRegisterRequest.tinkoff())
         response = client.get_market_search_by_ticker(ticker)
-        return Response(json.loads(response.json()))
+        return Response(response.dict())
 
 
 class MarketAll(APIView):
@@ -23,5 +23,16 @@ class MarketAll(APIView):
     def get(self, request):
         client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
         register = client.register_sandbox_account(ti.SandboxRegisterRequest.tinkoff())
-        response = client.get_market_stocks()
-        return Response(json.loads(response.json()))
+        response = client.get_market_stocks().dict()
+
+        origin_data = response['payload']['instruments']
+        response['payload']['instruments'] = []
+
+        for item in origin_data:
+            res = {}
+            res['name'] = item['name']
+            res['ticker'] = item['ticker']
+            res['currency'] = item['currency']
+            response['payload']['instruments'].append(res)
+
+        return Response(response)
