@@ -2,6 +2,7 @@ import requests
 from datetime import date, timedelta
 from time import sleep
 import pandas as pd
+from TinkoffAdapter.settings import FINNHUB_TOKEN
 
 
 def get_insiders(company_name: str, days: int) -> dict:
@@ -13,7 +14,7 @@ def get_insiders(company_name: str, days: int) -> dict:
     params = {
         'symbol': company_name,
         'to': to_,
-        'token': 'c3t8qkaad3icqurkr23g'
+        'token': FINNHUB_TOKEN
     }
 
     records_count = 0

@@ -26,6 +26,9 @@ SECRET_KEY = '8fm!=dl-bwo#k7di)3i3ig-%ghv_n*ajax386b^!=+c7akc+r='
 # Tinkoff Investment SANDBOX_TOKEN
 SANDBOX_TOKEN = 't.Cz0mvF5Z-uPelMSg5eTTHTSe06y2E227cjLXqp09J4ZzjdFrsw7Mk1VG6fgiuE_iJWcPzYbNjpvB5LZUkIV92Q'
 
+# FinnHub token for insider's transactions
+FINNHUB_TOKEN = 'c3t8qkaad3icqurkr23g'
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
