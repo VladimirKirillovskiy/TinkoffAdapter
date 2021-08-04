@@ -17,7 +17,6 @@ def get_insiders(company_name: str, days: int) -> dict:
         'token': FINNHUB_TOKEN
     }
 
-    records_count = 0
     data = []
     i = 0
     response = {
@@ -61,7 +60,6 @@ def get_insiders(company_name: str, days: int) -> dict:
         else:
             cut_r = r[:i + 1]
 
-        records_count += len(cut_r)
         data.extend(cut_r)
         params['to'] = r[i]['transactionDate']
 
