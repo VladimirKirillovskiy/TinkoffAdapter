@@ -13,8 +13,9 @@ class MarketDetail(APIView):
     def get(self, request, ticker):
         client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
         register = client.register_sandbox_account(ti.SandboxRegisterRequest.tinkoff())
-        response = client.get_market_search_by_ticker(ticker)
-        return Response(response.dict())
+        response = client.get_market_search_by_ticker(ticker).dict()
+        response['payload']['total'] = int(response['payload']['total'])
+        return Response(response)
 
 
 class MarketAll(APIView):
@@ -35,4 +36,5 @@ class MarketAll(APIView):
             res['currency'] = item['currency']
             response['payload']['instruments'].append(res)
 
+        response['payload']['total'] = int(response['payload']['total'])
         return Response(response)
