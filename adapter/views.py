@@ -32,7 +32,7 @@ class MarketCurrencies(APIView):
             res['ticker'] = item['ticker']
             res['currency'] = item['currency']
             data_json.append(res)
-        return Response(json.dumps(data_json, ensure_ascii=False))
+        return Response(data_json)
 
 
 class QuartEarnings(APIView):
@@ -43,7 +43,24 @@ class QuartEarnings(APIView):
         data = tick.quarterly_earnings
         data_json = None
         if data is not None:
-            data_json = data.to_json(orient="index")
+            data_json = {
+                data.index.values[0]: {
+                    "Revenue": data.loc[data.index.values[0], 'Revenue'],
+                    "Earnings": data.loc[data.index.values[0], 'Earnings']
+                },
+                data.index.values[1]: {
+                    "Revenue": data.loc[data.index.values[1], 'Revenue'],
+                    "Earnings": data.loc[data.index.values[1], 'Earnings']
+                },
+                data.index.values[2]: {
+                    "Revenue": data.loc[data.index.values[2], 'Revenue'],
+                    "Earnings": data.loc[data.index.values[2], 'Earnings']
+                },
+                data.index.values[3]: {
+                    "Revenue": data.loc[data.index.values[3], 'Revenue'],
+                    "Earnings": data.loc[data.index.values[3], 'Earnings']
+                }
+            }
         return Response(data_json)
 
 
@@ -77,7 +94,7 @@ class Info(APIView):
                 'Debt': data['totalDebt'],
                 'DebtToEquity': DebtToEquity
             }
-        return Response(json.dumps(data_json))
+        return Response(data_json)
 
 
 class Dividends(APIView):
@@ -85,11 +102,13 @@ class Dividends(APIView):
 
     def get(self, request, ticker_name):
         tick = yf.Ticker(ticker_name)
-        data = tick.dividends
-        if data is not None:
-            data_json = data.to_json()
-        else:
-            data_json = None
+        data = tick.dividends.to_dict()
+        data_json = []
+        for item in data:
+            res = {}
+            res['data'] = item.value // 10 ** 9
+            res['value'] = data[item]
+            data_json.append(res)
         return Response(data_json)
 
 
@@ -103,7 +122,7 @@ class NextDivs(APIView):
         if data is not None:
             time = data['exDividendDate']
             data_json = {'next_div_day': time}
-        return Response(json.dumps(data_json))
+        return Response(data_json)
 
 
 class NextEarns(APIView):
@@ -120,4 +139,4 @@ class NextEarns(APIView):
                 'EPS': data.loc[data.index.values[1], col],
                 'Revenue': data.loc[data.index.values[4], col]
             }
-        return Response(json.dumps(data_json))
+        return Response(data_json)
