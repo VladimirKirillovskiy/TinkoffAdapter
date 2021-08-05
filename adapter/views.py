@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import (IsAuthenticated, AllowAny)
@@ -21,6 +20,6 @@ class MarketDetail(APIView):
 class Insiders(APIView):
     permission_classes = [AllowAny,]
 
-    def get(self, request, ticker, days=7):
+    def get(self, request, ticker, days=10):
         data = services.get_insiders(ticker, days)
         return Response(services.pd_insiders(data))
