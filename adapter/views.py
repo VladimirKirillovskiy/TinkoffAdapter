@@ -43,24 +43,7 @@ class QuartEarnings(APIView):
         data = tick.quarterly_earnings
         data_json = None
         if data is not None:
-            data_json = {
-                data.index.values[0]: {
-                    "Revenue": data.loc[data.index.values[0], 'Revenue'],
-                    "Earnings": data.loc[data.index.values[0], 'Earnings']
-                },
-                data.index.values[1]: {
-                    "Revenue": data.loc[data.index.values[1], 'Revenue'],
-                    "Earnings": data.loc[data.index.values[1], 'Earnings']
-                },
-                data.index.values[2]: {
-                    "Revenue": data.loc[data.index.values[2], 'Revenue'],
-                    "Earnings": data.loc[data.index.values[2], 'Earnings']
-                },
-                data.index.values[3]: {
-                    "Revenue": data.loc[data.index.values[3], 'Revenue'],
-                    "Earnings": data.loc[data.index.values[3], 'Earnings']
-                }
-            }
+            data_json = data.to_dict(orient='index')
         return Response(data_json)
 
 
