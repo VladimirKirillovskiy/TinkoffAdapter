@@ -1,10 +1,14 @@
-from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import (IsAuthenticated, AllowAny)
 from TinkoffAdapter.settings import SANDBOX_TOKEN
 import tinvest as ti
-import json
+
+
+response_sample = {
+    'payload': [],
+    'total': 0,
+}
 
 
 class MarketDetail(APIView):
@@ -13,9 +17,11 @@ class MarketDetail(APIView):
     def get(self, request, ticker):
         client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
         register = client.register_sandbox_account(ti.SandboxRegisterRequest.tinkoff())
-        response = client.get_market_search_by_ticker(ticker).dict()
-        response['payload']['total'] = int(response['payload']['total'])
-        return Response(response)
+        response = client.get_market_search_by_ticker(ticker).dict()['payload']
+        r = response_sample.copy()
+        r['payload'] = response['instruments']
+        r['total'] = int(response['total'])
+        return Response(r)
 
 
 class MarketAll(APIView):
@@ -24,17 +30,17 @@ class MarketAll(APIView):
     def get(self, request):
         client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
         register = client.register_sandbox_account(ti.SandboxRegisterRequest.tinkoff())
-        response = client.get_market_stocks().dict()
+        response = client.get_market_stocks().dict()['payload']
+        stocks = response['instruments']
+        r = response_sample.copy()
 
-        origin_data = response['payload']['instruments']
-        response['payload']['instruments'] = []
+        for item in stocks:
+            res = {
+                'name': item['name'],
+                'ticker': item['ticker'],
+                'currency': item['currency'],
+            }
+            r['payload'].append(res)
 
-        for item in origin_data:
-            res = {}
-            res['name'] = item['name']
-            res['ticker'] = item['ticker']
-            res['currency'] = item['currency']
-            response['payload']['instruments'].append(res)
-
-        response['payload']['total'] = int(response['payload']['total'])
-        return Response(response)
+        r['total'] = int(response['total'])
+        return Response(r)
