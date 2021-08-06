@@ -20,7 +20,6 @@ def get_insiders(company_name: str, days: int) -> dict:
     data = []
     i = 0
     response = {
-        'detail': 'ok',
         'payload': [],
         'total': 0
     }
@@ -42,7 +41,6 @@ def get_insiders(company_name: str, days: int) -> dict:
                 if r[i]['transactionDate'] >= from_:
                     break
             else:
-                response['detail'] = 'no data'
                 return response
 
             cut_r = r[:i + 1]
@@ -65,9 +63,6 @@ def get_insiders(company_name: str, days: int) -> dict:
 
     response['payload'] = data
     response['total'] = len(data)
-
-    if response['total'] == 0:
-        response['detail'] = 'no data'
 
     return response
 
