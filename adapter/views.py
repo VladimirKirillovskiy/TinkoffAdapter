@@ -3,7 +3,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import (IsAuthenticated, AllowAny)
 from TinkoffAdapter.settings import SANDBOX_TOKEN
 import tinvest as ti
-
+import adapter.services as services
+ 
 
 response_sample = {
     'payload': [],
@@ -44,3 +45,12 @@ class MarketAll(APIView):
 
         r['total'] = int(response['total'])
         return Response(r)
+
+
+class Insiders(APIView):
+    permission_classes = [AllowAny,]
+
+    def get(self, request, ticker, days=10):
+        data = services.get_insiders(ticker, days)
+        return Response(services.pd_insiders(data))
+

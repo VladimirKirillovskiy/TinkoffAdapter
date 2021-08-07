@@ -1,10 +1,12 @@
 from django.urls import path
-from adapter.views import (MarketDetail, MarketAll)
+import adapter.views as ad
 from rest_framework.authtoken.views import obtain_auth_token
 
 
 urlpatterns = [
     path('login/', obtain_auth_token, name='login'),
-    path('market/stocks/', MarketAll.as_view(), name='marketall'),
-    path('market/stocks/<str:ticker>', MarketDetail.as_view(), name='marketstock'),
+    path('market/stocks/', ad.MarketAll.as_view(), name='marketall'),
+    path('market/stocks/<str:ticker>', ad.MarketDetail.as_view(), name='marketstock'),
+    path('insiders/<str:ticker>', ad.Insiders.as_view(), name='insiders10days'),
+    path('insiders/<str:ticker>/<int:days>', ad.Insiders.as_view(), name='insiders'),
 ]
