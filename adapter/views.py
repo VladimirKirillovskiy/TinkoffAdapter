@@ -20,17 +20,16 @@ class MarketDetail(APIView):
 class Currencies(APIView):
     permission_classes = [AllowAny,]
     
-    def get(self, request):
+    def get(self, request, currency):
         client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
         register = client.register_sandbox_account(ti.SandboxRegisterRequest.tinkoff())
         data = client.get_market_currencies().dict()['payload']['instruments']
-        data_json = []
-        for item in data:
-            res = {}
-            res['name'] = item['name']
-            res['ticker'] = item['ticker']
-            res['currency'] = item['currency']
-            res['figi'] = item['figi']
-            data_json.append(res)
-        return Response(json.dumps(data_json, ensure_ascii=False))
+        res = []
+        for i in data:
+            if i["currency"] == currency:
+                res.append(i)
+                break
+        return Response(json.loads(res, ensure_ascii=False))
+
+
 
