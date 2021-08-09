@@ -32,6 +32,7 @@ class MarketStocksList(APIView):
             r['payload'].append(res)
 
         r['total'] = int(response['total'])
+
         return Response(r)
 
 
@@ -45,6 +46,7 @@ class MarketStocksDetail(APIView):
         r = response_sample.copy()
         r['payload'] = response['instruments']
         r['total'] = int(response['total'])
+
         return Response(r)
 
 
@@ -68,11 +70,13 @@ class MarketCurrenciesList(APIView):
         
         r['payload'] = data_json
         r['total'] = len(r['payload'])
+
         return Response(r)
 
-      
+
 class MarketCurrenciesDetail(APIView):
-    permission_classes = [AllowAny,]
+    permission_classes = [AllowAny, ]
+
     def get(self, request, currency):
         client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
         register = client.register_sandbox_account(ti.SandboxRegisterRequest.tinkoff())
@@ -86,6 +90,7 @@ class MarketCurrenciesDetail(APIView):
         
         r['payload'] = data_json
         r['total'] = len(r['payload'])
+
         return Response(r) 
 
 
@@ -213,4 +218,3 @@ class Insiders(APIView):
     def get(self, request, ticker, days=10):
         data = services.get_insiders(ticker, days)
         return Response(services.pd_insiders(data))
-
