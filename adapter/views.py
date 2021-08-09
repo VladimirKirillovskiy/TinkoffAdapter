@@ -48,7 +48,7 @@ class MarketStocksDetail(APIView):
         return Response(r)
 
 
-class MarketCurrencies(APIView):
+class MarketCurrenciesList(APIView):
     permission_classes = [AllowAny, ]
     
     def get(self, request):
@@ -65,10 +65,28 @@ class MarketCurrencies(APIView):
               'currency': item['currency'],
             }
             data_json.append(res)
-
+        
         r['payload'] = data_json
         r['total'] = len(r['payload'])
         return Response(r)
+
+      
+class MarketCurrenciesDetail(APIView):
+    permission_classes = [AllowAny,]
+    def get(self, request, currency):
+        client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
+        register = client.register_sandbox_account(ti.SandboxRegisterRequest.tinkoff())
+        data = client.get_market_currencies().dict()['payload']['instruments']
+        r = response_sample.copy()
+        data_json = []
+        
+        for item in data:
+            if item["currency"] == currency.upper():
+                data_json.append(item)
+        
+        r['payload'] = data_json
+        r['total'] = len(r['payload'])
+        return Response(r) 
 
 
 class QuartEarnings(APIView):
@@ -195,3 +213,4 @@ class Insiders(APIView):
     def get(self, request, ticker, days=10):
         data = services.get_insiders(ticker, days)
         return Response(services.pd_insiders(data))
+

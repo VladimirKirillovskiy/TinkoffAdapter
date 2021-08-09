@@ -1,7 +1,6 @@
 from django.urls import path
-import adapter.views as ad
 from rest_framework.authtoken.views import obtain_auth_token
-
+import adapter.views as ad
 
 urlpatterns = [
     path('login/', obtain_auth_token, name='login'),
@@ -12,7 +11,8 @@ urlpatterns = [
     path('market/stocks/info/<str:ticker_name>', ad.Info.as_view(), name='info'),
     path('market/stocks/dividends/<str:ticker_name>', ad.Dividends.as_view(), name='dividends'),
     path('market/stocks/nextdivs/<str:ticker_name>', ad.NextDivs.as_view(), name='next dividends'),
-    path('market/currencies', ad.MarketCurrencies.as_view(), name='currencies'),
+    path('market/currencies', ad.MarketCurrenciesList.as_view(), name='currencies'),
+    path('market/currencies/<str:currency>', ad.MarketCurrenciesDetail.as_view(), name='currencies'),
     path('insiders/<str:ticker>', ad.Insiders.as_view(), name='insiders10days'),
     path('insiders/<str:ticker>/<int:days>', ad.Insiders.as_view(), name='insiders'),
 ]
