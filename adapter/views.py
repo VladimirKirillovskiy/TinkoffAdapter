@@ -54,3 +54,12 @@ class Insiders(APIView):
         data = services.get_insiders(ticker, days)
         return Response(services.pd_insiders(data))
 
+
+class InsidersCodes(APIView):
+    permission_classes = [AllowAny, ]
+
+    def get(self, request, code='ALL'):
+        r = response_sample.copy()
+        r['payload'] = services.get_codes(code)
+        r['total'] = len(r['payload'])
+        return Response(r)

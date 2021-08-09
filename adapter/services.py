@@ -119,3 +119,42 @@ def pd_insiders(origin_data: dict) -> dict:
     origin_data['payload'] = result_data.to_dict(orient='records')
     origin_data['total'] = len(origin_data['payload'])
     return origin_data
+
+
+def get_codes(code) -> dict:
+
+    codes = {
+        'A': 'Grant, award, or other acquisition of securities from the company',
+        'C': 'Conversion of derivative security',
+        'D': 'Sale or transfer of securities back to the company',
+        'E': 'Expiration of short derivative position',
+        'F': 'Payment of exercise price or tax liability using portion of securities received from the company',
+        'G': 'Gift of securities by or to the insider',
+        'H': 'Expiration (or cancellation) of long derivative position with value received',
+        'I': 'Discretionary transaction in accordance resulting in acquisition or disposition of issuer securities',
+        'J': 'Other acquisition or disposition (describe transaction)',
+        'K': 'Transaction in equity swap or instrument with similar characteristics',
+        'M': 'Exercise or conversion of derivative security received from the company',
+        'O': 'Exercise of out-of-the-money derivative security',
+        'P': 'Purchase of securities on an exchange or from another person ',
+        'S': 'Sale of securities on an exchange or to another person',
+        'U': 'Disposition pursuant to a tender of shares in a change of control transaction',
+        'V': 'A transaction voluntarily reported on Form 4',
+        'X': 'Exercise of in-the-money or at-the-money derivative security'
+    }
+
+    sources = [
+        'https://www.sec.gov/files/forms-3-4-5.pdf',
+        'https://www.sec.gov/about/forms/form4data.pdf'
+    ]
+
+    code = code.upper()
+
+    if code == 'ALL':
+        return [codes]
+    elif code == 'SOURCES':
+        return sources
+    elif code in codes:
+        return [codes[code]]
+    else:
+        return []
