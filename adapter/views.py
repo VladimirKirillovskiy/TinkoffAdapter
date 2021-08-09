@@ -1,16 +1,38 @@
-from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import (IsAuthenticated, AllowAny)
 from TinkoffAdapter.settings import SANDBOX_TOKEN
 import tinvest as ti
-import json
 import yfinance as yf
+import adapter.services as services
+
 
 response_sample = {
     'payload': [],
     'total': 0,
 }
+
+
+class MarketAll(APIView):
+    permission_classes = [AllowAny,]
+
+    def get(self, request):
+        client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
+        register = client.register_sandbox_account(ti.SandboxRegisterRequest.tinkoff())
+        response = client.get_market_stocks().dict()['payload']
+        stocks = response['instruments']
+        r = response_sample.copy()
+
+        for item in stocks:
+            res = {
+                'name': item['name'],
+                'ticker': item['ticker'],
+                'currency': item['currency'],
+            }
+            r['payload'].append(res)
+
+        r['total'] = int(response['total'])
+        return Response(r)
 
 
 class MarketDetail(APIView):
@@ -19,13 +41,16 @@ class MarketDetail(APIView):
     def get(self, request, ticker):
         client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
         register = client.register_sandbox_account(ti.SandboxRegisterRequest.tinkoff())
-        response = client.get_market_search_by_ticker(ticker)
-        return Response(json.loads(response.json()))
+        response = client.get_market_search_by_ticker(ticker).dict()['payload']
+        r = response_sample.copy()
+        r['payload'] = response['instruments']
+        r['total'] = int(response['total'])
+        return Response(r)
 
 
 class MarketCurrencies(APIView):
     permission_classes = [AllowAny, ]
-
+    
     def get(self, request):
         client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
         register = client.register_sandbox_account(ti.SandboxRegisterRequest.tinkoff())
@@ -33,15 +58,15 @@ class MarketCurrencies(APIView):
         r = response_sample.copy()
         data_json = []
         for item in data:
-            res = {}
-            res['name'] = item['name']
-            res['ticker'] = item['ticker']
-            res['currency'] = item['currency']
+            res = {
+              'name': item['name'],
+              'ticker': item['ticker'],
+              'currency': item['currency'],
+            }
             data_json.append(res)
         r['payload'] = data_json
         r['total'] = len(r['payload'])
         return Response(r)
-
 
 class QuartEarnings(APIView):
     permission_classes = [AllowAny, ]
@@ -152,3 +177,11 @@ class NextEarns(APIView):
             r['payload'] = data_r
             r['total'] = len(r['payload'])
         return Response(r)
+
+
+class Insiders(APIView):
+    permission_classes = [AllowAny,]
+
+    def get(self, request, ticker, days=10):
+        data = services.get_insiders(ticker, days)
+        return Response(services.pd_insiders(data))
