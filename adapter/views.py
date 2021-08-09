@@ -13,8 +13,8 @@ response_sample = {
 }
 
 
-class MarketAll(APIView):
-    permission_classes = [AllowAny,]
+class MarketStocksList(APIView):
+    permission_classes = [AllowAny, ]
 
     def get(self, request):
         client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
@@ -35,7 +35,7 @@ class MarketAll(APIView):
         return Response(r)
 
 
-class MarketDetail(APIView):
+class MarketStocksDetail(APIView):
     permission_classes = [AllowAny, ]
 
     def get(self, request, ticker):
@@ -57,6 +57,7 @@ class MarketCurrencies(APIView):
         data = client.get_market_currencies().dict()['payload']['instruments']
         r = response_sample.copy()
         data_json = []
+
         for item in data:
             res = {
               'name': item['name'],
@@ -64,9 +65,11 @@ class MarketCurrencies(APIView):
               'currency': item['currency'],
             }
             data_json.append(res)
+
         r['payload'] = data_json
         r['total'] = len(r['payload'])
         return Response(r)
+
 
 class QuartEarnings(APIView):
     permission_classes = [AllowAny, ]
@@ -76,9 +79,11 @@ class QuartEarnings(APIView):
         data = tick.quarterly_earnings
         r = response_sample.copy()
         data_json = []
+
         if data is not None:
             r['payload'] = data.to_dict(orient='index')
             r['total'] = len(r['payload'])
+
         return Response(r)
 
 
@@ -90,6 +95,7 @@ class Info(APIView):
         data = tick.info
         r = response_sample.copy()
         data_json = []
+
         if len(data) > 2:
             if data['trailingEps'] != None:
                 EPS = round(data['trailingEps'], 2)
@@ -115,6 +121,7 @@ class Info(APIView):
             }
             r['payload'] = data_json
             r['total'] = len(r['payload'])
+
         return Response(r)
 
 
@@ -126,6 +133,7 @@ class Dividends(APIView):
         data = tick.dividends
         r = response_sample.copy()
         data_json = []
+
         if len(data) > 0:
             data = data.to_dict()
             for item in data:
@@ -135,6 +143,7 @@ class Dividends(APIView):
                 data_json.append(res)
         r['payload'] = data_json
         r['total'] = len(r['payload'])
+
         return Response(r)
 
 
@@ -146,11 +155,13 @@ class NextDivs(APIView):
         data = tick.info
         r = response_sample.copy()
         data_json = []
+
         if len(data) > 2:
             time = data['exDividendDate']
             data_json = {'next_div_day': time}
             r['payload'] = data_json
             r['total'] = len(r['payload'])
+
         return Response(r)
 
 
@@ -162,6 +173,7 @@ class NextEarns(APIView):
         data = tick.calendar
         r = response_sample.copy()
         data_json = []
+
         if data is not None:
             col = data.columns.values[1]
             data_json = {
@@ -171,6 +183,7 @@ class NextEarns(APIView):
             }
             r['payload'] = data_json
             r['total'] = len(r['payload'])
+
         return Response(r)
 
 
