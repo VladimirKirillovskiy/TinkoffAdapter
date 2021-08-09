@@ -7,6 +7,11 @@ import tinvest as ti
 import json
 import yfinance as yf
 
+response_sample = {
+    'payload': [],
+    'total': 0,
+}
+
 
 class MarketDetail(APIView):
     permission_classes = [AllowAny, ]
@@ -25,6 +30,7 @@ class MarketCurrencies(APIView):
         client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
         register = client.register_sandbox_account(ti.SandboxRegisterRequest.tinkoff())
         data = client.get_market_currencies().dict()['payload']['instruments']
+        r = response_sample.copy()
         data_json = []
         for item in data:
             res = {}
@@ -32,7 +38,9 @@ class MarketCurrencies(APIView):
             res['ticker'] = item['ticker']
             res['currency'] = item['currency']
             data_json.append(res)
-        return Response(data_json)
+        r['payload'] = data_json
+        r['total'] = len(r['payload'])
+        return Response(r)
 
 
 class QuartEarnings(APIView):
@@ -41,10 +49,12 @@ class QuartEarnings(APIView):
     def get(self, request, ticker_name):
         tick = yf.Ticker(ticker_name)
         data = tick.quarterly_earnings
-        data_json = None
+        r = response_sample.copy()
+        data_json = []
         if data is not None:
-            data_json = data.to_dict(orient='index')
-        return Response(data_json)
+            r['payload'] = data.to_dict(orient='index')
+            r['total'] = len(r['payload'])
+        return Response(r)
 
 
 class Info(APIView):
@@ -53,8 +63,9 @@ class Info(APIView):
     def get(self, request, ticker_name):
         tick = yf.Ticker(ticker_name)
         data = tick.info
-        data_json = None
-        if data is not None:
+        r = response_sample.copy()
+        data_json = []
+        if len(data) > 2:
             if data['trailingEps'] != None:
                 EPS = round(data['trailingEps'], 2)
             else:
@@ -77,7 +88,9 @@ class Info(APIView):
                 'Debt': data['totalDebt'],
                 'DebtToEquity': DebtToEquity
             }
-        return Response(data_json)
+            r['payload'] = data_json
+            r['total'] = len(r['payload'])
+        return Response(r)
 
 
 class Dividends(APIView):
@@ -85,14 +98,19 @@ class Dividends(APIView):
 
     def get(self, request, ticker_name):
         tick = yf.Ticker(ticker_name)
-        data = tick.dividends.to_dict()
+        data = tick.dividends
+        r = response_sample.copy()
         data_json = []
-        for item in data:
-            res = {}
-            res['data'] = item.value // 10 ** 9
-            res['value'] = data[item]
-            data_json.append(res)
-        return Response(data_json)
+        if len(data) > 0:
+            data = data.to_dict()
+            for item in data:
+                res = {}
+                res['data'] = item.value // 10 ** 9
+                res['value'] = data[item]
+                data_json.append(res)
+        r['payload'] = data_json
+        r['total'] = len(r['payload'])
+        return Response(r)
 
 
 class NextDivs(APIView):
@@ -101,11 +119,14 @@ class NextDivs(APIView):
     def get(self, request, ticker_name):
         tick = yf.Ticker(ticker_name)
         data = tick.info
-        data_json = None
-        if data is not None:
+        r = response_sample.copy()
+        data_json = []
+        if len(data) > 2:
             time = data['exDividendDate']
             data_json = {'next_div_day': time}
-        return Response(data_json)
+            r['payload'] = data_json
+            r['total'] = len(r['payload'])
+        return Response(r)
 
 
 class NextEarns(APIView):
@@ -114,7 +135,8 @@ class NextEarns(APIView):
     def get(self, request, ticker_name):
         tick = yf.Ticker(ticker_name)
         data = tick.calendar
-        data_json = None
+        r = response_sample.copy()
+        data_json = []
         if data is not None:
             col = data.columns.values[1]
             data_json = {
@@ -122,4 +144,6 @@ class NextEarns(APIView):
                 'EPS': data.loc[data.index.values[1], col],
                 'Revenue': data.loc[data.index.values[4], col]
             }
-        return Response(data_json)
+            r['payload'] = data_json
+            r['total'] = len(r['payload'])
+        return Response(r)
