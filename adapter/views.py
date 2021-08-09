@@ -95,7 +95,6 @@ class Info(APIView):
         tick = yf.Ticker(ticker_name)
         data = tick.info
         r = response_sample.copy()
-        data_json = []
 
         if len(data) > 2:
             if data['trailingEps'] != None:
@@ -120,9 +119,7 @@ class Info(APIView):
                 'Debt': data['totalDebt'],
                 'DebtToEquity': DebtToEquity
             }
-            data_r = []
-            data_r.append(data_json)
-            r['payload'] = data_r
+            r['payload'] = [data_json]
             r['total'] = len(r['payload'])
 
         return Response(r)
@@ -139,11 +136,14 @@ class Dividends(APIView):
 
         if len(data) > 0:
             data = data.to_dict()
+
             for item in data:
-                res = {}
-                res['data'] = item.value // 10 ** 9
-                res['value'] = data[item]
+                res = {
+                    'data': item.value // 10 ** 9,
+                    'value': data[item],
+                }
                 data_json.append(res)
+
         r['payload'] = data_json
         r['total'] = len(r['payload'])
 
@@ -157,14 +157,11 @@ class NextDivs(APIView):
         tick = yf.Ticker(ticker_name)
         data = tick.info
         r = response_sample.copy()
-        data_json = []
 
         if len(data) > 2:
             time = data['exDividendDate']
             data_json = {'next_div_day': time}
-            data_r = []
-            data_r.append(data_json)
-            r['payload'] = data_r
+            r['payload'] = [data_json]
             r['total'] = len(r['payload'])
 
         return Response(r)
