@@ -81,7 +81,8 @@ class QuartEarnings(APIView):
         data_json = []
 
         if data is not None:
-            r['payload'] = data.to_dict(orient='index')
+            data_json.append(data.to_dict(orient='index'))
+            r['payload'] = data_json
             r['total'] = len(r['payload'])
 
         return Response(r)
@@ -119,7 +120,9 @@ class Info(APIView):
                 'Debt': data['totalDebt'],
                 'DebtToEquity': DebtToEquity
             }
-            r['payload'] = data_json
+            data_r = []
+            data_r.append(data_json)
+            r['payload'] = data_r
             r['total'] = len(r['payload'])
 
         return Response(r)
@@ -159,7 +162,9 @@ class NextDivs(APIView):
         if len(data) > 2:
             time = data['exDividendDate']
             data_json = {'next_div_day': time}
-            r['payload'] = data_json
+            data_r = []
+            data_r.append(data_json)
+            r['payload'] = data_r
             r['total'] = len(r['payload'])
 
         return Response(r)
@@ -172,16 +177,16 @@ class NextEarns(APIView):
         tick = yf.Ticker(ticker_name)
         data = tick.calendar
         r = response_sample.copy()
-        data_json = []
-
+        
         if data is not None:
             col = data.columns.values[1]
             data_json = {
-                'Date': data.loc[data.index.values[0], col].value // 10 ** 9,
-                'EPS': data.loc[data.index.values[1], col],
-                'Revenue': data.loc[data.index.values[4], col]
+              'Date': data.loc[data.index.values[0], col].value // 10 ** 9,
+              'EPS': data.loc[data.index.values[1], col],
+              'Revenue': data.loc[data.index.values[4], col],
             }
-            r['payload'] = data_json
+           
+            r['payload'] = [data_json]
             r['total'] = len(r['payload'])
 
         return Response(r)
