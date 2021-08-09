@@ -28,13 +28,17 @@ class MarketCurrenciesDetail(APIView):
         r = response_sample.copy()
         data_json = []
         for item in data:
-            if item["currency"] == currency:
+            if item["currency"] == currency.upper():
                 res = {
                   'currency': item['currency'],
                   'name': item['name'],
                   'ticker': item['ticker'],
-                  'currency': item['currency'],
                   'min_price_increment': item['min_price_increment'],
+                  'figi': item['figi'],
+                  'lot': item['lot'],
+                  'isin': item['isin'],
+                  'min_quantity': item['min_quantity'],
+                  'type': item['type'],
                 }
                 data_json.append(res)
         r['payload'] = data_json
