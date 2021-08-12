@@ -4,7 +4,6 @@ from django.contrib.auth import get_user_model
 
 
 UserModel = get_user_model()
-print(UserModel.objects.all())
 
 if not UserModel.objects.filter(username='javabot3').exists():
     user = UserModel.objects.create_user('javabot3', password='secret222')
