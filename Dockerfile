@@ -1,10 +1,7 @@
-FROM python:3.9.6
+FROM python:3.9.6-slim-buster
 ENV PYTHONUNBUFFERED=1
 
 WORKDIR /code
-
-RUN git clone https://github.com/VladimirKirillovskiy/TinkoffAdapter.git /code/ \
-	&& git checkout docker
 
 COPY . /code/
 
