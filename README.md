@@ -19,3 +19,6 @@ Download Dockerfile to empty folder, change directory to it, then type in CLI:
 docker build . -t tinkoffadapter
 docker run -d -p 8000:8000 tinkoffadapter
 ```
+The site is available at adresses:
+- http://localhost:8000/
+- http://127.0.0.1:8000/
