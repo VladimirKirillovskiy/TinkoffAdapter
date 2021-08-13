@@ -12,3 +12,10 @@ python manage.py makemigrations
 python manage.py migrate
 python manage.py runserver
 ```
+
+## Start with Docker
+Download Dockerfile to empty folder, change directory to it, then type in CLI:
+```
+docker build . -t tinkoffadapter
+docker run -d -p 8000:8000 tinkoffadapter
+```
