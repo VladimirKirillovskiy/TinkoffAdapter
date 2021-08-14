@@ -89,15 +89,16 @@ class MarketCurrenciesDetail(APIView):
         data = client.get_market_currencies().dict()['payload']['instruments']
         r = response_sample.copy()
         data_json = []
-        
         for item in data:
-            if item["currency"] == currency.upper():
-                data_json.append(item)
-        
+            if item["ticker"][:3] == currency.upper():
+                data_price = client.get_market_orderbook(item['figi'], 0)
+                item['last_price'] = data_price.dict()['payload']['last_price']
+                data_json = item
+
         r['payload'] = data_json
         r['total'] = len(r['payload'])
 
-        return Response(r) 
+        return Response(r)
 
 
 class QuartEarnings(APIView):
