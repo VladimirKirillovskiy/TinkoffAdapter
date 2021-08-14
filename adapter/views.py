@@ -51,7 +51,7 @@ class MarketStocksDetail(APIView):
             r['payload'] = response
             r['total'] = len(r['payload'])
 
-        return Response(response)
+        return Response(r)
 
 
 class MarketCurrenciesList(APIView):
