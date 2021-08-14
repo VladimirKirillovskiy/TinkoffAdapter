@@ -91,7 +91,7 @@ class MarketCurrenciesDetail(APIView):
         data_json = []
         
         for item in data:
-            if item["currency"] == currency.upper():
+            if item["ticker"][:3] == currency.upper():
                 data_json.append(item)
         
         r['payload'] = data_json
