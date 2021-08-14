@@ -44,8 +44,12 @@ class MarketStocksDetail(APIView):
         register = client.register_sandbox_account(ti.SandboxRegisterRequest.tinkoff())
         response = client.get_market_search_by_ticker(ticker).dict()['payload']
         r = response_sample.copy()
-        r['payload'] = response['instruments']
-        r['total'] = int(response['total'])
+        if response['total'] != 0:
+            response = response['instruments'][0]
+            data_price = client.get_market_orderbook(response['figi'], 0)
+            response['last_price'] = data_price.dict()['payload']['last_price']
+            r['payload'] = response
+            r['total'] = len(r['payload'])
 
         return Response(r)
 
@@ -61,10 +65,12 @@ class MarketCurrenciesList(APIView):
         data_json = []
 
         for item in data:
+            data_price = client.get_market_orderbook(item['figi'], 0)
             res = {
-              'name': item['name'],
-              'ticker': item['ticker'],
-              'currency': item['currency'],
+                'name': item['name'],
+                'ticker': item['ticker'],
+                'currency': item['currency'],
+                'last_price': data_price.dict()['payload']['last_price']
             }
             data_json.append(res)
         
