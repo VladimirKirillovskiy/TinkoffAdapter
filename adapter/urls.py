@@ -20,8 +20,8 @@ urlpatterns = [
     path('insiders/<str:ticker>/<int:days>', ad.Insiders.as_view(), name='insiders'),
 
     path('sandbox/account/register/', ad.SandboxAccountRegister.as_view(), name='sandbox_register'),
-    path('sandbox/account/remove/', ad.SandboxAccountRemove.as_view(), name='sandbox_register'),
-    path('sandbox/account/clear/', ad.SandboxAccountClear.as_view(), name='sandbox_register'),
-    path('sandbox/balance/set/', ad.SandboxBalanceSet.as_view(), name='sandbox_set'),
-    path('sandbox/balance/reset/', ad.SandboxBalanceReset.as_view(), name='sandbox_reset'),
+    path('sandbox/account/remove/', ad.SandboxAccountRemove.as_view(), name='sandbox_remove'),
+    path('sandbox/balance/set/positions/', ad.SandboxBalanceSetPositions.as_view(), name='sandbox_setpos'),
+    path('sandbox/balance/set/currencies/', ad.SandboxBalanceSetCurrencies.as_view(), name='sandbox_setcur'),
+    path('sandbox/balance/clear/', ad.SandboxBalanceClear.as_view(), name='sandbox_clear'),
 ]
