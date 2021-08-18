@@ -21,7 +21,7 @@ urlpatterns = [
 
     path('sandbox/account/register/', ad.SandboxAccountRegister.as_view(), name='sandbox_register'),
     path('sandbox/account/remove/', ad.SandboxAccountRemove.as_view(), name='sandbox_remove'),
-    path('sandbox/balance/set/positions/', ad.SandboxBalanceSetPositions.as_view(), name='sandbox_setpos'),
+    path('sandbox/balance/set/stocks/', ad.SandboxBalanceSetPositions.as_view(), name='sandbox_setpos'),
     path('sandbox/balance/set/currencies/', ad.SandboxBalanceSetCurrencies.as_view(), name='sandbox_setcur'),
     path('sandbox/balance/clear/', ad.SandboxBalanceClear.as_view(), name='sandbox_clear'),
 ]
