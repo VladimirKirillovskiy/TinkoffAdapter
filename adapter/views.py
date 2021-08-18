@@ -3,11 +3,13 @@ from rest_framework.response import Response
 from rest_framework.permissions import (IsAuthenticated, AllowAny)
 from TinkoffAdapter.settings import SANDBOX_TOKEN
 import tinvest as ti
+from tinvest.exceptions import UnexpectedError
 import yfinance as yf
 import adapter.services as services
 
 
 response_sample = {
+    'status_code': 200,
     'payload': [],
     'total': 0,
 }
@@ -44,11 +46,12 @@ class MarketStocksDetail(APIView):
         register = client.register_sandbox_account(ti.SandboxRegisterRequest.tinkoff())
         response = client.get_market_search_by_ticker(ticker).dict()['payload']
         r = response_sample.copy()
+
         if response['total'] != 0:
             response = response['instruments'][0]
             data_price = client.get_market_orderbook(response['figi'], 0)
             response['last_price'] = data_price.dict()['payload']['last_price']
-            r['payload'] = response
+            r['payload'] = [response]
             r['total'] = len(r['payload'])
 
         return Response(r)
@@ -89,11 +92,12 @@ class MarketCurrenciesDetail(APIView):
         data = client.get_market_currencies().dict()['payload']['instruments']
         r = response_sample.copy()
         data_json = []
+
         for item in data:
             if item["ticker"][:3] == currency.upper():
                 data_price = client.get_market_orderbook(item['figi'], 0)
                 item['last_price'] = data_price.dict()['payload']['last_price']
-                data_json = item
+                data_json += [item]
 
         r['payload'] = data_json
         r['total'] = len(r['payload'])
@@ -225,3 +229,73 @@ class Insiders(APIView):
     def get(self, request, ticker, days=10):
         data = services.get_insiders(ticker, days)
         return Response(services.pd_insiders(data))
+
+
+class SandboxAccountRegister(APIView):
+    permission_classes = [AllowAny, ]
+
+    def post(self, request):
+        data = request.data
+        r = response_sample.copy()
+
+        if 'sandbox_token' in data:
+            try:
+                client = ti.SyncClient(data['sandbox_token'], use_sandbox=True)
+                response = client.register_sandbox_account(ti.SandboxRegisterRequest.tinkoff())
+            except UnexpectedError as e:
+                r['code'] = int(str(e))
+        else:
+            r['code'] = 400
+
+        return Response(r)
+
+
+class SandboxAccountRemove(APIView):
+    permission_classes = [AllowAny, ]
+
+    def post(self, request):
+        data = request.data
+        r = response_sample.copy()
+
+        if 'sandbox_token' in data:
+            try:
+                client = ti.SyncClient(data['sandbox_token'], use_sandbox=True)
+                broker_account_id = client.get_accounts().payload.accounts[0].broker_account_id
+            except UnexpectedError as e:
+                r['code'] = int(str(e[:3]))
+            else:
+                client.remove_sandbox_account(broker_account_id)
+        else:
+            r['code'] = 400
+
+        return Response(r)
+
+
+class SandboxAccountClear(APIView):
+    permission_classes = [AllowAny, ]
+
+    def post(self, request):
+        data = request.data
+        r = response_sample.copy()
+
+        if 'sandbox_token' in data:
+            try:
+                client = ti.SyncClient(data['sandbox_token'], use_sandbox=True)
+                # broker_account_id = client.get_accounts().payload.accounts[0].broker_account_id
+                broker_account_id = '4'
+            except UnexpectedError as e:
+                r['code'] = int(str(e[:3]))
+            else:
+                client.clear_sandbox_account(broker_account_id)
+        else:
+            r['code'] = 400
+
+        return Response(r)
+
+
+class SandboxBalanceSet(APIView):
+    pass
+
+
+class SandboxBalanceReset(APIView):
+    pass
