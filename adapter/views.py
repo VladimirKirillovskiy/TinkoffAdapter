@@ -277,7 +277,7 @@ class SandboxAccountRemove(APIView):
         return Response(r)
 
 
-class SandboxBalanceClear(APIView):
+class SandboxAccountClear(APIView):
     permission_classes = [AllowAny, ]
 
     def post(self, request):
