@@ -303,7 +303,7 @@ class SandboxAccountClear(APIView):
         return Response(r)
 
 
-class SandboxBalanceSetPositions(APIView):
+class SandboxSetPositions(APIView):
     permission_classes = [AllowAny, ]
 
     def post(self, request):
@@ -337,7 +337,7 @@ class SandboxBalanceSetPositions(APIView):
         return Response(r)
 
 
-class SandboxBalanceSetCurrencies(APIView):
+class SandboxSetCurrencies(APIView):
     permission_classes = [AllowAny, ]
 
     def post(self, request):
