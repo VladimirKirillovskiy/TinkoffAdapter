@@ -15,4 +15,9 @@ urlpatterns = [
     path('market/currencies/<str:currency>', ad.MarketCurrenciesDetail.as_view(), name='currencies'),
     path('insiders/<str:ticker>', ad.Insiders.as_view(), name='insiders10days'),
     path('insiders/<str:ticker>/<int:days>', ad.Insiders.as_view(), name='insiders'),
+
+    path('operations/portfolio/stocks/', ad.CheckPortfolioStocks.as_view(), name='stocks'),
+    path('operations/portfolio/currencies/', ad.CheckPortfolioCurrencies.as_view(), name='currencies'),
+    path('operations/marketorder/stocks/', ad.StocksMarketOrder.as_view(), name='Stocks Market Order'),
+    path('operations/marketorder/currencies/', ad.CurrenciesMarketOrder.as_view(), name='Currencies Market Order'),
 ]
