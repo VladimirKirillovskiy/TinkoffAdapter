@@ -277,8 +277,8 @@ class CheckPortfolioCurrencies(APIView):
 
 
 class StocksMarketOrder(APIView):
-    permission_classes = [AllowAny, ]
-
+    permission_classes = [AllowAny, ]    #Сначала смотрится текущая цена, потом создается лимитная заявка по текущей цене.
+                                         #Потому что в Sandbox "Все рыночные поручения исполняются по фиксированной цене в 100"
     def post(self, request):
         data = request.data
         r = response_sample.copy()
