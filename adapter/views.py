@@ -290,13 +290,16 @@ class StocksMarketOrder(APIView):
                 broker_account_id = accounts[0].broker_account_id
                 info = client.get_market_search_by_ticker(data['ticker']).dict()['payload']
                 if info['total'] != 0:
-                    figi = info['instruments'][0]['figi'], 0
-                    body = ti.MarketOrderRequest(
+                    figi = info['instruments'][0]['figi']
+                    data_price = client.get_market_orderbook(figi, 0)
+                    price = data_price.payload.last_price
+                    body = ti.LimitOrderRequest(
                         lots=data['lots'],
-                        operation=data['operation']
+                        operation=data['operation'],
+                        price=price,
                     )
                     try:
-                        client.post_orders_market_order(figi, body, broker_account_id)
+                        client.post_orders_limit_order(figi, body, broker_account_id)
                         r['payload'] = client.get_portfolio(broker_account_id).payload.positions
                         r['total'] = len(r['payload'])
                     except UnexpectedError as e:
@@ -311,9 +314,9 @@ class StocksMarketOrder(APIView):
         return Response(r)
 
 
-class CurrenciesMarketOrder(APIView):
-    permission_classes = [AllowAny, ]
-
+class CurrenciesMarketOrder(APIView):   #1 лот = 2000 единиц валюты
+    permission_classes = [AllowAny, ]   #Сначала смотрится текущая цена, потом создается лимитная заявка по текущей цене.
+                                        #Потому что в Sandbox "Все рыночные поручения исполняются по фиксированной цене в 100"
     def post(self, request):
         data = request.data
         r = response_sample.copy()
@@ -330,12 +333,15 @@ class CurrenciesMarketOrder(APIView):
                         figi = item['figi']
 
                     if figi is not None:
-                        body = ti.MarketOrderRequest(
+                        data_price = client.get_market_orderbook(item['figi'], 0)
+                        price = data_price.payload.last_price
+                        body = ti.LimitOrderRequest(
                             lots=data['lots'],
-                            operation=data['operation']
+                            operation=data['operation'],
+                            price=price,
                         )
                         try:
-                            client.post_orders_market_order(figi, body, broker_account_id)
+                            client.post_orders_limit_order(figi, body, broker_account_id)
                             r['payload'] = client.get_portfolio(broker_account_id).payload.positions
                             r['total'] = len(r['payload'])
                         except UnexpectedError as e:
