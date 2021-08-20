@@ -3,11 +3,13 @@ from rest_framework.response import Response
 from rest_framework.permissions import (IsAuthenticated, AllowAny)
 from TinkoffAdapter.settings import SANDBOX_TOKEN
 import tinvest as ti
+from tinvest.exceptions import UnexpectedError
 import yfinance as yf
 import adapter.services as services
 
 
 response_sample = {
+    'code': 200,
     'payload': [],
     'total': 0,
 }
@@ -227,3 +229,142 @@ class Insiders(APIView):
     def get(self, request, ticker, days=10):
         data = services.get_insiders(ticker, days)
         return Response(services.pd_insiders(data))
+
+
+class SandboxAccountRegister(APIView):
+    permission_classes = [AllowAny, ]
+
+    def post(self, request):
+        data = request.data
+        r = response_sample.copy()
+
+        if 'sandbox_token' in data:
+            try:
+                client = ti.SyncClient(data['sandbox_token'], use_sandbox=True)
+                client.register_sandbox_account(ti.SandboxRegisterRequest.tinkoff())
+            except UnexpectedError as e:
+                r['code'] = 401
+        else:
+            r['code'] = 400
+
+        return Response(r)
+
+# В последующих запросах подразумеваем, что sandbox_token корректный
+
+
+class SandboxAccountRemove(APIView):
+    permission_classes = [AllowAny, ]
+
+    def post(self, request):
+        data = request.data
+        r = response_sample.copy()
+
+        if 'sandbox_token' in data:
+            try:
+                client = ti.SyncClient(data['sandbox_token'], use_sandbox=True)
+                accounts = client.get_accounts().payload.accounts
+
+                if accounts[0].broker_account_type == 'Tinkoff':
+                    client.remove_sandbox_account(accounts[0].broker_account_id)
+                else:
+                    raise Exception
+
+            except Exception as e:
+                r['code'] = 500  # можно добавить detail - не найден broker_account_id
+        else:
+            r['code'] = 400
+
+        return Response(r)
+
+
+class SandboxAccountClear(APIView):
+    permission_classes = [AllowAny, ]
+
+    def post(self, request):
+        data = request.data
+        r = response_sample.copy()
+
+        if 'sandbox_token' in data:
+            try:
+                client = ti.SyncClient(data['sandbox_token'], use_sandbox=True)
+                accounts = client.get_accounts().payload.accounts
+
+                if accounts[0].broker_account_type == 'Tinkoff':
+                    client.clear_sandbox_account(accounts[0].broker_account_id)
+                else:
+                    raise Exception
+
+            except Exception as e:
+                r['code'] = 500
+
+        else:
+            r['code'] = 400
+
+        return Response(r)
+
+
+class SandboxSetPositions(APIView):
+    permission_classes = [AllowAny, ]
+
+    def post(self, request):
+        data = request.data
+        r = response_sample.copy()
+
+        if 'sandbox_token' and 'balance' and 'figi' in data:
+            client = ti.SyncClient(data['sandbox_token'], use_sandbox=True)
+
+            try:
+                accounts = client.get_accounts().payload.accounts
+
+                if accounts[0].broker_account_type == 'Tinkoff':
+                    broker_account_id = accounts[0].broker_account_id
+                else:
+                    raise Exception
+
+            except Exception as e:
+                r['code'] = 500
+
+            else:
+                body = ti.SandboxSetPositionBalanceRequest(
+                    balance = data['balance'],
+                    figi = data['figi'],
+                )
+                client.set_sandbox_positions_balance(body, broker_account_id)
+
+        else:
+            r['code'] = 400
+
+        return Response(r)
+
+
+class SandboxSetCurrencies(APIView):
+    permission_classes = [AllowAny, ]
+
+    def post(self, request):
+        data = request.data
+        r = response_sample.copy()
+
+        if 'sandbox_token' and 'balance' and 'currency' in data:
+            client = ti.SyncClient(data['sandbox_token'], use_sandbox=True)
+
+            try:
+                accounts = client.get_accounts().payload.accounts
+
+                if accounts[0].broker_account_type == 'Tinkoff':
+                    broker_account_id = accounts[0].broker_account_id
+                else:
+                    raise Exception
+
+            except Exception as e:
+                r['code'] = 500
+
+            else:
+                body = ti.SandboxSetCurrencyBalanceRequest(
+                    balance=data['balance'],
+                    currency=data['currency'],
+                )
+                client.set_sandbox_currencies_balance(body, broker_account_id)
+        else:
+            r['code'] = 400
+
+        return Response(r)
