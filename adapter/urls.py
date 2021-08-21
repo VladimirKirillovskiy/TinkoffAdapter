@@ -18,10 +18,15 @@ urlpatterns = [
 
     path('insiders/<str:ticker>', ad.Insiders.as_view(), name='insiders10days'),
     path('insiders/<str:ticker>/<int:days>', ad.Insiders.as_view(), name='insiders'),
-
+  
     path('sandbox/account/register/', ad.SandboxAccountRegister.as_view(), name='sandbox_register'),
     path('sandbox/account/remove/', ad.SandboxAccountRemove.as_view(), name='sandbox_remove'),
     path('sandbox/account/clear/', ad.SandboxAccountClear.as_view(), name='sandbox_clear'),
     path('sandbox/set-stock-balance/', ad.SandboxSetStocks.as_view(), name='sandbox_stock'),
     path('sandbox/set-currency-balance/', ad.SandboxSetCurrencies.as_view(), name='sandbox_currency'),
+
+    path('operations/portfolio/stocks/', ad.CheckPortfolioStocks.as_view(), name='sandbox_stocks'),
+    path('operations/portfolio/currencies/', ad.CheckPortfolioCurrencies.as_view(), name='sandbox_currencies'),
+    path('operations/marketorder/stocks/', ad.StocksMarketOrder.as_view(), name='sandbox_Stocks_Market_Order'),
+    path('operations/marketorder/currencies/', ad.CurrenciesMarketOrder.as_view(), name='Currencies_Market_Order'),    
 ]
