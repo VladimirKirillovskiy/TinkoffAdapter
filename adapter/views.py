@@ -10,7 +10,7 @@ import adapter.services as services
 
 response_sample = {
     'code': 200,
-    'detail': '',
+    'detail': 'ok',
     'payload': [],
     'total': 0,
 }
@@ -47,11 +47,12 @@ class MarketStocksDetail(APIView):
         register = client.register_sandbox_account(ti.SandboxRegisterRequest.tinkoff())
         response = client.get_market_search_by_ticker(ticker).dict()['payload']
         r = response_sample.copy()
+
         if response['total'] != 0:
             response = response['instruments'][0]
             data_price = client.get_market_orderbook(response['figi'], 0)
             response['last_price'] = data_price.dict()['payload']['last_price']
-            r['payload'] = response
+            r['payload'] = [response]
             r['total'] = len(r['payload'])
 
         return Response(r)
@@ -92,11 +93,12 @@ class MarketCurrenciesDetail(APIView):
         data = client.get_market_currencies().dict()['payload']['instruments']
         r = response_sample.copy()
         data_json = []
+
         for item in data:
             if item["ticker"][:3] == currency.upper():
                 data_price = client.get_market_orderbook(item['figi'], 0)
                 item['last_price'] = data_price.dict()['payload']['last_price']
-                data_json = item
+                data_json += [item]
 
         r['payload'] = data_json
         r['total'] = len(r['payload'])
@@ -230,6 +232,7 @@ class Insiders(APIView):
         return Response(services.pd_insiders(data))
 
 
+
 class CheckPortfolioStocks(APIView):
     permission_classes = [AllowAny, ]
 
@@ -243,14 +246,15 @@ class CheckPortfolioStocks(APIView):
                 accounts = client.get_accounts().payload.accounts
                 broker_account_id = accounts[0].broker_account_id
 
-                r['payload'] = client.get_portfolio(broker_account_id).payload.positions
+                r['payload'] = [dict(item) for item in client.get_portfolio(broker_account_id).payload.positions]
                 r['total'] = len(r['payload'])
             except UnexpectedError as e:
                 r['code'] = int(str(e))
         else:
             r['code'] = 400
-
+            
         return Response(r)
+
 
 
 class CheckPortfolioCurrencies(APIView):
@@ -266,7 +270,7 @@ class CheckPortfolioCurrencies(APIView):
                 accounts = client.get_accounts().payload.accounts
                 broker_account_id = accounts[0].broker_account_id
 
-                r['payload'] = client.get_portfolio_currencies(broker_account_id).payload.currencies
+                r['payload'] = [dict(item) for item in client.get_portfolio_currencies(broker_account_id).payload.currencies]
                 r['total'] = len(r['payload'])
             except UnexpectedError as e:
                 r['code'] = int(str(e))
@@ -289,6 +293,7 @@ class StocksMarketOrder(APIView):
                 accounts = client.get_accounts().payload.accounts
                 broker_account_id = accounts[0].broker_account_id
                 info = client.get_market_search_by_ticker(data['ticker']).dict()['payload']
+                
                 if info['total'] != 0:
                     figi = info['instruments'][0]['figi']
                     data_price = client.get_market_orderbook(figi, 0)
@@ -300,7 +305,7 @@ class StocksMarketOrder(APIView):
                     )
                     try:
                         client.post_orders_limit_order(figi, body, broker_account_id)
-                        r['payload'] = client.get_portfolio(broker_account_id).payload.positions
+                        r['payload'] = [dict(item) for item in client.get_portfolio(broker_account_id).payload.positions]
                         r['total'] = len(r['payload'])
                     except UnexpectedError as e:
                         r['detail'] = eval(e.text)['payload']['code']
@@ -328,6 +333,7 @@ class CurrenciesMarketOrder(APIView):   #1 лот = 2000 единиц валют
                 broker_account_id = accounts[0].broker_account_id
                 info = client.get_market_currencies().dict()['payload']['instruments']
                 figi = None
+                
                 for item in info:
                     if item["ticker"][:3] == data['ticker'].upper():
                         figi = item['figi']
@@ -342,7 +348,7 @@ class CurrenciesMarketOrder(APIView):   #1 лот = 2000 единиц валют
                         )
                         try:
                             client.post_orders_limit_order(figi, body, broker_account_id)
-                            r['payload'] = client.get_portfolio(broker_account_id).payload.positions
+                            r['payload'] = [dict(item) for item in client.get_portfolio(broker_account_id).payload.positions]
                             r['total'] = len(r['payload'])
                         except UnexpectedError as e:
                             r['detail'] = eval(e.text)['payload']['code']
