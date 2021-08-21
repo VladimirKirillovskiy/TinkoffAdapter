@@ -232,6 +232,159 @@ class Insiders(APIView):
         return Response(services.pd_insiders(data))
 
 
+class SandboxAccountRegister(APIView):
+    permission_classes = [AllowAny, ]
+
+    def post(self, request):
+        data = request.data
+        r = response_sample.copy()
+
+        if 'sandbox_token' in data:
+            try:
+                client = ti.SyncClient(data['sandbox_token'], use_sandbox=True)
+                response = client.register_sandbox_account(ti.SandboxRegisterRequest.tinkoff())
+                r['payload'] = [{
+                    'broker_account_id': response.payload.broker_account_id
+                }]
+
+            except UnexpectedError:
+                r['code'] = 401
+                r['detail'] = 'invalid sandbox_token'
+
+        else:
+            r['code'] = 400
+            r['detail'] = 'sandbox token not provided'
+
+        return Response(r)
+
+
+class SandboxAccountRemove(APIView):
+    permission_classes = [AllowAny, ]
+
+    def post(self, request):
+        data = request.data
+        r = response_sample.copy()
+
+        if 'sandbox_token' in data:
+            try:
+                client = ti.SyncClient(data['sandbox_token'], use_sandbox=True)
+                accounts = client.get_accounts().payload.accounts
+
+                if accounts[0].broker_account_type == 'Tinkoff':
+                    client.remove_sandbox_account(accounts[0].broker_account_id)
+                else:
+                    r['code'] = '500'
+                    r['detail'] = 'account not registered'
+
+            except UnexpectedError:
+                r['code'] = 401
+                r['detail'] = 'invalid sandbox_token'
+
+        else:
+            r['code'] = 400
+            r['detail'] = 'sandbox token not provided'
+
+        return Response(r)
+
+
+class SandboxAccountClear(APIView):
+    permission_classes = [AllowAny, ]
+
+    def post(self, request):
+        data = request.data
+        r = response_sample.copy()
+
+        if 'sandbox_token' in data:
+            try:
+                client = ti.SyncClient(data['sandbox_token'], use_sandbox=True)
+                accounts = client.get_accounts().payload.accounts
+
+                if accounts[0].broker_account_type == 'Tinkoff':
+                    client.clear_sandbox_account(accounts[0].broker_account_id)
+                else:
+                    r['code'] = '500'
+                    r['detail'] = 'account not registered'
+
+            except UnexpectedError:
+                r['code'] = 401
+                r['detail'] = 'invalid sandbox_token'
+
+        else:
+            r['code'] = 400
+            r['detail'] = 'sandbox token not provided'
+
+        return Response(r)
+
+
+class SandboxSetStocks(APIView):
+    permission_classes = [AllowAny, ]
+
+    def post(self, request):
+        data = request.data
+        r = response_sample.copy()
+
+        if ('sandbox_token' in data) and ('figi' in data) and ('balance' in data):
+            try:
+                client = ti.SyncClient(data['sandbox_token'], use_sandbox=True)
+                accounts = client.get_accounts().payload.accounts
+
+                if accounts[0].broker_account_type == 'Tinkoff':
+                    broker_account_id = accounts[0].broker_account_id
+                    body = ti.SandboxSetPositionBalanceRequest(
+                        balance=data['balance'],
+                        figi=data['figi'],
+                    )
+                    client.set_sandbox_positions_balance(body, broker_account_id)
+
+                else:
+                    r['code'] = '500'
+                    r['detail'] = 'account not registered'
+
+            except UnexpectedError:
+                r['code'] = 401
+                r['detail'] = 'invalid sandbox_token'
+
+        else:
+            r['code'] = 400
+            r['detail'] = 'lack of data. post sandbox_token, figi, balance'
+
+        return Response(r)
+
+
+class SandboxSetCurrencies(APIView):
+    permission_classes = [AllowAny, ]
+
+    def post(self, request):
+        data = request.data
+        r = response_sample.copy()
+
+        if ('sandbox_token' in data) and ('currency' in data) and ('balance' in data):
+            try:
+                client = ti.SyncClient(data['sandbox_token'], use_sandbox=True)
+                accounts = client.get_accounts().payload.accounts
+
+                if accounts[0].broker_account_type == 'Tinkoff':
+                    broker_account_id = accounts[0].broker_account_id
+                    body = ti.SandboxSetCurrencyBalanceRequest(
+                        balance=data['balance'],
+                        currency=data['currency'],
+                    )
+                    client.set_sandbox_currencies_balance(body, broker_account_id)
+
+                else:
+                    r['code'] = '500'
+                    r['detail'] = 'account not registered'
+
+            except UnexpectedError:
+                r['code'] = 401
+                r['detail'] = 'invalid sandbox_token'
+
+        else:
+            r['code'] = 400
+            r['detail'] = 'lack of data. post sandbox_token, currency, balance'
+
+        return Response(r)
+
 
 class CheckPortfolioStocks(APIView):
     permission_classes = [AllowAny, ]
