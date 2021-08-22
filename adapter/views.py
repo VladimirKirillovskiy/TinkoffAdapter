@@ -2,7 +2,6 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import (IsAuthenticated, AllowAny)
 from TinkoffAdapter.settings import SANDBOX_TOKEN
-from TinkoffAdapter.settings import FINNHUB_TOKEN
 import tinvest as ti
 from tinvest.exceptions import UnexpectedError
 import yfinance as yf
