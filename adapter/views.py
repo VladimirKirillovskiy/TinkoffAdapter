@@ -228,7 +228,8 @@ class Insiders(APIView):
     permission_classes = [AllowAny,]
 
     def get(self, request, ticker, days=10):
-        data = services.get_insiders(ticker, days)
+        r = response_sample.copy()
+        data = services.get_insiders(r, ticker, days)
         return Response(services.pd_insiders(data))
 
 

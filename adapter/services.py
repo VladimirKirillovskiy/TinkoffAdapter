@@ -5,7 +5,7 @@ import pandas as pd
 from TinkoffAdapter.settings import FINNHUB_TOKEN
 
 
-def get_insiders(company_name: str, days: int) -> dict:
+def get_insiders(response: dict, company_name: str, days: int) -> dict:
     url = 'https://finnhub.io/api/v1/stock/insider-transactions'
 
     to_ = str(date.today() + timedelta(days=1))
@@ -19,10 +19,6 @@ def get_insiders(company_name: str, days: int) -> dict:
 
     data = []
     i = 0
-    response = {
-        'payload': [],
-        'total': 0
-    }
 
     while True:
         r = requests.get(url, params=params)
