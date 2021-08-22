@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import (IsAuthenticated, AllowAny)
 from TinkoffAdapter.settings import SANDBOX_TOKEN
+from TinkoffAdapter.settings import FINNHUB_TOKEN
 import tinvest as ti
 from tinvest.exceptions import UnexpectedError
 import yfinance as yf
@@ -514,3 +515,23 @@ class CurrenciesMarketOrder(APIView):   #1 лот = 2000 единиц валют
             r['code'] = 400
 
         return Response(r)
+
+
+class NewsSentiment(APIView):
+    permission_classes = [AllowAny, ]
+
+    def get(self, request, ticker):
+        r = response_sample.copy()
+        data = services.get_news_sentiment(r, ticker.upper())
+
+        return Response(data)
+
+
+class NewsCompany(APIView):
+    permission_classes = [AllowAny, ]
+
+    def get(self, request, ticker, days=10):
+        r = response_sample.copy()
+        data = services.get_news_company(r, ticker.upper(), days)
+
+        return Response(data)

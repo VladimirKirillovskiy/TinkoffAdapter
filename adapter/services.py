@@ -1,5 +1,5 @@
 import requests
-from datetime import date, timedelta
+from datetime import datetime, date, timedelta
 from time import sleep
 import pandas as pd
 from TinkoffAdapter.settings import FINNHUB_TOKEN
@@ -13,8 +13,9 @@ def get_insiders(response: dict, company_name: str, days: int) -> dict:
 
     params = {
         'symbol': company_name,
+        'from': from_,
         'to': to_,
-        'token': FINNHUB_TOKEN
+        'token': FINNHUB_TOKEN,
     }
 
     data = []
@@ -115,3 +116,77 @@ def pd_insiders(origin_data: dict) -> dict:
     origin_data['payload'] = result_data.to_dict(orient='records')
     origin_data['total'] = len(origin_data['payload'])
     return origin_data
+
+
+def get_news_sentiment(r: dict, ticker: str):
+    url = 'https://finnhub.io/api/v1/news-sentiment'
+    params = {
+        'symbol': ticker,
+        'token': FINNHUB_TOKEN,
+    }
+
+    while True:
+        response = requests.get(url, params=params)
+
+        if response.status_code == 429:
+            sleep(1)
+            print('too many requests')
+            continue
+        else:
+            response = response.json()
+            if len(response.keys()) == 1:  # если нет информации по тикеру
+                r['code'] = 204
+                r['detail'] = 'no data for ticker. accepted only US companies'
+            else:
+                r['payload'] = [response]
+                r['total'] = 1
+            break
+
+    return r
+
+
+def get_news_company(r: dict, ticker: str, days: int) -> dict:
+    url = 'https://finnhub.io/api/v1/company-news'
+
+
+    params = {
+        'symbol': ticker,
+        'from': str(date.today() - timedelta(days=days)),
+        'to': str(date.today() + timedelta(days=1)),
+        'token': FINNHUB_TOKEN,
+    }
+
+    while True:
+        response = requests.get(url, params=params)
+
+        if response.status_code == 429:
+            sleep(1)
+            print('too many requests')
+            continue
+        else:
+            response = response.json()
+            if len(response) == 0:  # если нет информации по тикеру
+                r['code'] = 204
+                r['detail'] = 'no data for ticker. accepted only NA companies'
+            else:
+                data = []
+                for item in response:
+                    if item['summary'] == '':  # фильтр пустых новостей
+                        continue
+
+                    kit = {
+                        'source': item['source'],
+                        'category': item['category'],
+                        'related': item['related'],
+                        'utc': datetime.utcfromtimestamp(item['datetime']),
+                        'summary': item['summary'],
+                        'image': item['image'],
+                        'url': item['url'],
+                    }
+                    data.append(kit)
+
+                r['payload'] = sorted(data, key=lambda item: item['utc'], reverse=True)
+                r['total'] = len(data)
+            break
+
+    return r
