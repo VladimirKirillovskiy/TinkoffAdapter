@@ -514,3 +514,23 @@ class CurrenciesMarketOrder(APIView):   #1 лот = 2000 единиц валют
             r['code'] = 400
 
         return Response(r)
+
+
+class NewsSentiment(APIView):
+    permission_classes = [AllowAny, ]
+
+    def get(self, request, ticker):
+        r = response_sample.copy()
+        data = services.get_news_sentiment(r, ticker.upper())
+
+        return Response(data)
+
+
+class NewsCompany(APIView):
+    permission_classes = [AllowAny, ]
+
+    def get(self, request, ticker, days=10):
+        r = response_sample.copy()
+        data = services.get_news_company(r, ticker.upper(), days)
+
+        return Response(data)
