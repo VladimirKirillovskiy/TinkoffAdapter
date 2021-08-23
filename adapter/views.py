@@ -387,11 +387,15 @@ class SandboxSetCurrencies(APIView):
 
                 if accounts[0].broker_account_type == 'Tinkoff':
                     broker_account_id = accounts[0].broker_account_id
-                    body = ti.SandboxSetCurrencyBalanceRequest(
-                        balance=data['balance'],
-                        currency=data['currency'],
-                    )
-                    client.set_sandbox_currencies_balance(body, broker_account_id)
+                    if data['currency'] in ['RUB', 'EUR', 'USD']:
+                        body = ti.SandboxSetCurrencyBalanceRequest(
+                            balance=data['balance'],
+                            currency=data['currency'],
+                        )
+                        client.set_sandbox_currencies_balance(body, broker_account_id)
+                    else:
+                        r['code'] = '500'
+                        r['detail'] = 'invalid currency'
 
                 else:
                     r['code'] = '500'
