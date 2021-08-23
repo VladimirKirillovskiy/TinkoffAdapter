@@ -543,9 +543,12 @@ class Recommendations(APIView):
         r = response_sample.copy()
         data = services.get_recommendations(r, ticker)
         return Response(data)
-    # Поля: 'date' - Дата рекоммендации, 'firm' - компания, давшая рекоммендацию
-    # 'to_grade' - рекоммендация изменена на, 'from_grade' - рекоммендация изменена с
-    # 'action' - суть изменения рекоммендации(Повышена, понижена, добавлена)
+    # Поля ответа:
+    # 'date' - дата рекоммендации,
+    # 'firm' - компания, давшая рекоммендацию,
+    # 'to_grade' - рекоммендация изменена на,
+    # 'from_grade' - рекоммендация изменена с,
+    # 'action' - суть изменения рекоммендации(повышена, понижена, добавлена).
 
 
 class RecommendationsInDays(APIView):
@@ -555,9 +558,12 @@ class RecommendationsInDays(APIView):
         r = response_sample.copy()
         data = services.get_recommendations_days(r, ticker, days)
         return Response(data)
-    # Поля: 'date' - Дата рекоммендации, 'firm' - компания, давшая рекоммендацию
-    # 'to_grade' - рекоммендация изменена на, 'from_grade' - рекоммендация изменена с
-    # 'action' - суть изменения рекоммендации(Повышена, понижена, добавлена)
+    # Поля ответа:
+    # 'date' - дата рекоммендации,
+    # 'firm' - компания, давшая рекоммендацию,
+    # 'to_grade' - рекоммендация изменена на,
+    # 'from_grade' - рекоммендация изменена с,
+    # 'action' - суть изменения рекоммендации(повышена, понижена, добавлена).
 
 
 class MajorHolders(APIView):
@@ -567,6 +573,9 @@ class MajorHolders(APIView):
         r = response_sample.copy()
         data = services.get_major_holders(r, ticker)
         return Response(data)
-    # Поля: 'holder' - Компания держатель акций, 'shares' - количество акций в руках компании
-    # 'date_reported' - дата последнего отчёта, по которому берутся данные, '%out' - процент от всех акций
-    # 'value' - общая стоимость акций
+    # Поля ответа:
+    # 'holder' - компания держатель акций,
+    # 'shares' - количество акций в руках компании,
+    # 'date_reported' - дата последнего отчёта, по которому берутся данные,
+    # '%out' - процент от всех акций,
+    # 'value' - общая стоимость акций,
