@@ -327,7 +327,7 @@ class SandboxSetStocks(APIView):
 
     # Поля запроса:
     # 'sandbox_token': str
-    # 'figi': str
+    # 'ticker': str
     # 'balance': int
 
     def post(self, request):
