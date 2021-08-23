@@ -470,7 +470,6 @@ class StocksMarketOrder(APIView):
     # 'ticker': str
     # 'lots': int
     # 'operation': str - 'Buy' or 'Sell'
-    # 'price': int
 
     def post(self, request):
         data = request.data
@@ -520,7 +519,6 @@ class CurrenciesMarketOrder(APIView):
     # 'ticker': str
     # 'lots': int
     # 'operation': str - 'Buy' or 'Sell'
-    # 'price': int
 
     def post(self, request):
         data = request.data
