@@ -416,14 +416,23 @@ class CheckPortfolioStocks(APIView):
             try:
                 client = ti.SyncClient(data['sandbox_token'], use_sandbox=True)
                 accounts = client.get_accounts().payload.accounts
-                broker_account_id = accounts[0].broker_account_id
 
-                r['payload'] = [dict(item) for item in client.get_portfolio(broker_account_id).payload.positions]
-                r['total'] = len(r['payload'])
-            except UnexpectedError as e:
-                r['code'] = int(str(e))
+                if accounts[0].broker_account_type == 'Tinkoff':
+                    broker_account_id = accounts[0].broker_account_id
+                    r['payload'] = [dict(item) for item
+                                    in client.get_portfolio(broker_account_id).payload.positions]
+                    r['total'] = len(r['payload'])
+                else:
+                    r['code'] = '500'
+                    r['detail'] = 'account not registered'
+
+            except UnexpectedError:
+                r['code'] = 401
+                r['detail'] = 'invalid sandbox_token'
+
         else:
             r['code'] = 400
+            r['detail'] = 'sandbox token not provided'
             
         return Response(r)
 
@@ -442,14 +451,23 @@ class CheckPortfolioCurrencies(APIView):
             try:
                 client = ti.SyncClient(data['sandbox_token'], use_sandbox=True)
                 accounts = client.get_accounts().payload.accounts
-                broker_account_id = accounts[0].broker_account_id
 
-                r['payload'] = [dict(item) for item in client.get_portfolio_currencies(broker_account_id).payload.currencies]
-                r['total'] = len(r['payload'])
-            except UnexpectedError as e:
-                r['code'] = int(str(e))
+                if accounts[0].broker_account_type == 'Tinkoff':
+                    broker_account_id = accounts[0].broker_account_id
+                    r['payload'] = [dict(item) for item
+                                    in client.get_portfolio_currencies(broker_account_id).payload.currencies]
+                    r['total'] = len(r['payload'])
+                else:
+                    r['code'] = '500'
+                    r['detail'] = 'account not registered'
+
+            except UnexpectedError:
+                r['code'] = 401
+                r['detail'] = 'invalid sandbox_token'
+
         else:
             r['code'] = 400
+            r['detail'] = 'sandbox token not provided'
 
         return Response(r)
 
@@ -465,7 +483,6 @@ class StocksMarketOrder(APIView):
     # 'ticker': str
     # 'lots': int
     # 'operation': str - 'Buy' or 'Sell'
-    # 'price': int
 
     def post(self, request):
         data = request.data
@@ -495,10 +512,14 @@ class StocksMarketOrder(APIView):
                         r['detail'] = eval(e.text)['payload']['code']
                 else:
                     r['detail'] = 'invalid ticker'
+
             except UnexpectedError as e:
-                r['code'] = int(str(e))
+                r['code'] = 401
+                r['detail'] = 'invalid sandbox_token'
+
         else:
             r['code'] = 400
+            r['detail'] = 'sandbox token not provided'
 
         return Response(r)
 
@@ -515,7 +536,6 @@ class CurrenciesMarketOrder(APIView):
     # 'ticker': str
     # 'lots': int
     # 'operation': str - 'Buy' or 'Sell'
-    # 'price': int
 
     def post(self, request):
         data = request.data
@@ -584,6 +604,7 @@ class Recommendations(APIView):
         r = response_sample.copy()
         data = services.get_recommendations(r, ticker)
         return Response(data)
+
     # Поля ответа:
     # 'date' - дата рекоммендации,
     # 'firm' - компания, давшая рекоммендацию,
@@ -599,6 +620,7 @@ class RecommendationsInDays(APIView):
         r = response_sample.copy()
         data = services.get_recommendations_days(r, ticker, days)
         return Response(data)
+
     # Поля ответа:
     # 'date' - дата рекоммендации,
     # 'firm' - компания, давшая рекоммендацию,
