@@ -236,6 +236,9 @@ class Insiders(APIView):
 class SandboxAccountRegister(APIView):
     permission_classes = [AllowAny, ]
 
+    # Поля запроса:
+    # 'sandbox_token': str
+
     def post(self, request):
         data = request.data
         r = response_sample.copy()
@@ -261,6 +264,9 @@ class SandboxAccountRegister(APIView):
 
 class SandboxAccountRemove(APIView):
     permission_classes = [AllowAny, ]
+
+    # Поля запроса:
+    # 'sandbox_token': str
 
     def post(self, request):
         data = request.data
@@ -291,6 +297,9 @@ class SandboxAccountRemove(APIView):
 class SandboxAccountClear(APIView):
     permission_classes = [AllowAny, ]
 
+    # Поля запроса:
+    # 'sandbox_token': str
+
     def post(self, request):
         data = request.data
         r = response_sample.copy()
@@ -319,6 +328,11 @@ class SandboxAccountClear(APIView):
 
 class SandboxSetStocks(APIView):
     permission_classes = [AllowAny, ]
+
+    # Поля запроса:
+    # 'sandbox_token': str
+    # 'figi': str
+    # 'balance': int
 
     def post(self, request):
         data = request.data
@@ -355,6 +369,11 @@ class SandboxSetStocks(APIView):
 class SandboxSetCurrencies(APIView):
     permission_classes = [AllowAny, ]
 
+    # Поля запроса:
+    # 'sandbox_token': str
+    # 'currency': str
+    # 'balance': int
+
     def post(self, request):
         data = request.data
         r = response_sample.copy()
@@ -390,6 +409,9 @@ class SandboxSetCurrencies(APIView):
 class CheckPortfolioStocks(APIView):
     permission_classes = [AllowAny, ]
 
+    # Поля запроса:
+    # 'sandbox_token': str
+
     def post(self, request):
         data = request.data
         r = response_sample.copy()
@@ -400,7 +422,8 @@ class CheckPortfolioStocks(APIView):
                 accounts = client.get_accounts().payload.accounts
                 broker_account_id = accounts[0].broker_account_id
 
-                r['payload'] = [dict(item) for item in client.get_portfolio(broker_account_id).payload.positions]
+                r['payload'] = [dict(item) for item in client.get_portfolio(broker_account_id).payload.positions
+                                if item.instrument_type == 'Stock']
                 r['total'] = len(r['payload'])
             except UnexpectedError as e:
                 r['code'] = int(str(e))
@@ -410,9 +433,11 @@ class CheckPortfolioStocks(APIView):
         return Response(r)
 
 
-
 class CheckPortfolioCurrencies(APIView):
     permission_classes = [AllowAny, ]
+
+    # Поля запроса:
+    # 'sandbox_token': str
 
     def post(self, request):
         data = request.data
@@ -435,8 +460,18 @@ class CheckPortfolioCurrencies(APIView):
 
 
 class StocksMarketOrder(APIView):
-    permission_classes = [AllowAny, ]    #Сначала смотрится текущая цена, потом создается лимитная заявка по текущей цене.
-                                         #Потому что в Sandbox "Все рыночные поручения исполняются по фиксированной цене в 100"
+    permission_classes = [AllowAny, ]
+
+    # Сначала смотрится текущая цена, потом создается лимитная заявка по текущей цене.
+    # Потому что в Sandbox "Все рыночные поручения исполняются по фиксированной цене в 100"
+
+    # Поля запроса:
+    # 'sandbox_token': str
+    # 'ticker': str
+    # 'lots': int
+    # 'operation': str - 'Buy' or 'Sell'
+    # 'price': int
+
     def post(self, request):
         data = request.data
         r = response_sample.copy()
@@ -459,7 +494,8 @@ class StocksMarketOrder(APIView):
                     )
                     try:
                         client.post_orders_limit_order(figi, body, broker_account_id)
-                        r['payload'] = [dict(item) for item in client.get_portfolio(broker_account_id).payload.positions]
+                        r['payload'] = [dict(item) for item in client.get_portfolio(broker_account_id).payload.positions
+                                        if item.instrument_type == 'Stock']
                         r['total'] = len(r['payload'])
                     except UnexpectedError as e:
                         r['detail'] = eval(e.text)['payload']['code']
@@ -473,9 +509,20 @@ class StocksMarketOrder(APIView):
         return Response(r)
 
 
-class CurrenciesMarketOrder(APIView):   #1 лот = 2000 единиц валюты
-    permission_classes = [AllowAny, ]   #Сначала смотрится текущая цена, потом создается лимитная заявка по текущей цене.
-                                        #Потому что в Sandbox "Все рыночные поручения исполняются по фиксированной цене в 100"
+class CurrenciesMarketOrder(APIView):
+    permission_classes = [AllowAny, ]
+
+    # 1 лот = 2000 единиц валюты
+    # Сначала смотрится текущая цена, потом создается лимитная заявка по текущей цене.
+    # Потому что в Sandbox "Все рыночные поручения исполняются по фиксированной цене в 100"
+
+    # Поля запроса:
+    # 'sandbox_token': str
+    # 'ticker': str
+    # 'lots': int
+    # 'operation': str - 'Buy' or 'Sell'
+    # 'price': int
+
     def post(self, request):
         data = request.data
         r = response_sample.copy()
