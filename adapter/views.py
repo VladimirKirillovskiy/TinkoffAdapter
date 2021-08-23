@@ -418,8 +418,7 @@ class CheckPortfolioStocks(APIView):
                 accounts = client.get_accounts().payload.accounts
                 broker_account_id = accounts[0].broker_account_id
 
-                r['payload'] = [dict(item) for item in client.get_portfolio(broker_account_id).payload.positions
-                                if item.instrument_type == 'Stock']
+                r['payload'] = [dict(item) for item in client.get_portfolio(broker_account_id).payload.positions]
                 r['total'] = len(r['payload'])
             except UnexpectedError as e:
                 r['code'] = int(str(e))
@@ -490,8 +489,7 @@ class StocksMarketOrder(APIView):
                     )
                     try:
                         client.post_orders_limit_order(figi, body, broker_account_id)
-                        r['payload'] = [dict(item) for item in client.get_portfolio(broker_account_id).payload.positions
-                                        if item.instrument_type == 'Stock']
+                        r['payload'] = [dict(item) for item in client.get_portfolio(broker_account_id).payload.positions]
                         r['total'] = len(r['payload'])
                     except UnexpectedError as e:
                         r['detail'] = eval(e.text)['payload']['code']
