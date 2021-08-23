@@ -498,26 +498,35 @@ class StocksMarketOrder(APIView):
             try:
                 client = ti.SyncClient(data['sandbox_token'], use_sandbox=True)
                 accounts = client.get_accounts().payload.accounts
-                broker_account_id = accounts[0].broker_account_id
-                info = client.get_market_search_by_ticker(data['ticker']).dict()['payload']
-                
-                if info['total'] != 0:
-                    figi = info['instruments'][0]['figi']
-                    data_price = client.get_market_orderbook(figi, 0)
-                    price = data_price.payload.last_price
-                    body = ti.LimitOrderRequest(
-                        lots=data['lots'],
-                        operation=data['operation'],
-                        price=price,
-                    )
-                    try:
-                        client.post_orders_limit_order(figi, body, broker_account_id)
-                        r['payload'] = [dict(item) for item in client.get_portfolio(broker_account_id).payload.positions]
-                        r['total'] = len(r['payload'])
-                    except UnexpectedError as e:
-                        r['detail'] = eval(e.text)['payload']['code']
+
+                if accounts[0].broker_account_type == 'Tinkoff':
+                    broker_account_id = accounts[0].broker_account_id
+                    info = client.get_market_search_by_ticker(data['ticker']).dict()['payload']
+
+                    if info['total'] != 0:
+                        figi = info['instruments'][0]['figi']
+                        data_price = client.get_market_orderbook(figi, 0)
+                        price = data_price.payload.last_price
+                        body = ti.LimitOrderRequest(
+                            lots=data['lots'],
+                            operation=data['operation'],
+                            price=price,
+                        )
+                        try:
+                            client.post_orders_limit_order(figi, body, broker_account_id)
+                            r['payload'] = [dict(item) for item
+                                            in client.get_portfolio(broker_account_id).payload.positions]
+                            r['total'] = len(r['payload'])
+
+                        except UnexpectedError as e:
+                            r['code'] = 500
+                            r['detail'] = eval(e.text)['payload']['code']
+                    else:
+                        r['code'] = '500'
+                        r['detail'] = 'invalid ticker'
                 else:
-                    r['detail'] = 'invalid ticker'
+                    r['code'] = '500'
+                    r['detail'] = 'account not registered'
 
             except UnexpectedError:
                 r['code'] = 401
