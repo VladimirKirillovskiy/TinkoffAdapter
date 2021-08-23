@@ -2,6 +2,7 @@ import requests
 from datetime import datetime, date, timedelta
 from time import sleep
 import pandas as pd
+import yfinance as yf
 from TinkoffAdapter.settings import FINNHUB_TOKEN
 
 
@@ -185,4 +186,62 @@ def get_news_company(r: dict, ticker: str, days: int) -> dict:
                 r['total'] = len(data)
             break
 
+    return r
+
+
+def get_recommendations(r: dict, ticker: str):
+    tick = yf.Ticker(ticker)
+    data = tick.recommendations
+    data_json = []
+    if data is not None:
+        col1 = data.columns.values[0]
+        col2 = data.columns.values[1]
+        col3 = data.columns.values[2]
+        col4 = data.columns.values[3]
+        for index in reversed(data.index):
+            res = {
+                'date': index.value // 10 ** 9,
+                'firm': data.loc[index, col1],
+                'to_grade': data.loc[index, col2],
+                'from_grade': data.loc[index, col3],
+                'action': data.loc[index, col4]
+            }
+            data_json.append(res)
+    else:
+        r['code'] = 400
+        r['detail'] = 'no data'
+    r['payload'] = data_json
+    r['total'] = len(r['payload'])
+
+    return r
+
+
+def get_recommendations_days(r: dict, ticker: str, days: int):
+    tick = yf.Ticker(ticker)
+    data = tick.recommendations
+    data_json = []
+    date_r = datetime.today().replace(hour=0, minute=0, second=0) - timedelta(days=days)
+    date_r = date_r.timestamp()
+    if data is not None:
+        col1 = data.columns.values[0]
+        col2 = data.columns.values[1]
+        col3 = data.columns.values[2]
+        col4 = data.columns.values[3]
+        for index in reversed(data.index):
+            if (index.value // 10 ** 9) > date_r:
+                res = {
+                    'date': index.value // 10 ** 9,
+                    'firm': data.loc[index, col1],
+                    'to_grade': data.loc[index, col2],
+                    'from_grade': data.loc[index, col3],
+                    'action': data.loc[index, col4]
+                }
+                data_json.append(res)
+            else:
+                break
+    else:
+        r['code'] = 400
+        r['detail'] = 'no data'
+    r['payload'] = data_json
+    r['total'] = len(r['payload'])
     return r

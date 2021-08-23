@@ -534,3 +534,21 @@ class NewsCompany(APIView):
         data = services.get_news_company(r, ticker.upper(), days)
 
         return Response(data)
+
+
+class Recommendations(APIView):
+    permission_classes = [AllowAny, ]
+
+    def get(self, request, ticker):
+        r = response_sample.copy()
+        data = services.get_recommendations(r, ticker)
+        return Response(data)
+
+
+class RecommendationsInDays(APIView):
+    permission_classes = [AllowAny, ]
+
+    def get(self, request, ticker, days=10):
+        r = response_sample.copy()
+        data = services.get_recommendations_days(r, ticker, days)
+        return Response(data)
