@@ -442,7 +442,7 @@ class CheckPortfolioStocks(APIView):
 
         else:
             r['code'] = 400
-            r['detail'] = 'sandbox token not provided'
+            r['detail'] = 'lack of data. post sandbox_token'
             
         return Response(r)
 
@@ -477,7 +477,7 @@ class CheckPortfolioCurrencies(APIView):
 
         else:
             r['code'] = 400
-            r['detail'] = 'sandbox token not provided'
+            r['detail'] = 'lack of data. post sandbox_token'
 
         return Response(r)
 
