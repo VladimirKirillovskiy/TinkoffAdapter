@@ -253,7 +253,7 @@ class SandboxAccountRegister(APIView):
 
         else:
             r['code'] = 400
-            r['detail'] = 'sandbox token not provided'
+            r['detail'] = 'lack of data. post sandbox_token'
 
         return Response(r)
 
@@ -285,7 +285,7 @@ class SandboxAccountRemove(APIView):
 
         else:
             r['code'] = 400
-            r['detail'] = 'sandbox token not provided'
+            r['detail'] = 'lack of data. post sandbox_token'
 
         return Response(r)
 
@@ -317,7 +317,7 @@ class SandboxAccountClear(APIView):
 
         else:
             r['code'] = 400
-            r['detail'] = 'sandbox token not provided'
+            r['detail'] = 'lack of data. post sandbox_token'
 
         return Response(r)
 
@@ -334,18 +334,24 @@ class SandboxSetStocks(APIView):
         data = request.data
         r = response_sample.copy()
 
-        if ('sandbox_token' in data) and ('figi' in data) and ('balance' in data):
+        if ('sandbox_token' in data) and ('ticker' in data) and ('balance' in data):
             try:
                 client = ti.SyncClient(data['sandbox_token'], use_sandbox=True)
                 accounts = client.get_accounts().payload.accounts
 
                 if accounts[0].broker_account_type == 'Tinkoff':
                     broker_account_id = accounts[0].broker_account_id
-                    body = ti.SandboxSetPositionBalanceRequest(
-                        balance=data['balance'],
-                        figi=data['figi'],
-                    )
-                    client.set_sandbox_positions_balance(body, broker_account_id)
+                    figi = client.get_market_search_by_ticker(data['ticker']).payload.dict()
+
+                    if figi['total'] != 0:
+                        body = ti.SandboxSetPositionBalanceRequest(
+                            balance=data['balance'],
+                            figi=figi['instruments'][0]['figi'],
+                        )
+                        client.set_sandbox_positions_balance(body, broker_account_id)
+                    else:
+                        r['code'] = '500'
+                        r['detail'] = 'invalid ticker'
 
                 else:
                     r['code'] = '500'
@@ -357,7 +363,7 @@ class SandboxSetStocks(APIView):
 
         else:
             r['code'] = 400
-            r['detail'] = 'lack of data. post sandbox_token, figi, balance'
+            r['detail'] = 'lack of data. post sandbox_token, ticker, balance'
 
         return Response(r)
 
@@ -488,7 +494,7 @@ class StocksMarketOrder(APIView):
         data = request.data
         r = response_sample.copy()
 
-        if 'sandbox_token' in data:
+        if ('sandbox_token' in data) and ('ticker' in data) and ('lots' in data) and ('operation' in data):
             try:
                 client = ti.SyncClient(data['sandbox_token'], use_sandbox=True)
                 accounts = client.get_accounts().payload.accounts
@@ -513,13 +519,13 @@ class StocksMarketOrder(APIView):
                 else:
                     r['detail'] = 'invalid ticker'
 
-            except UnexpectedError as e:
+            except UnexpectedError:
                 r['code'] = 401
                 r['detail'] = 'invalid sandbox_token'
 
         else:
             r['code'] = 400
-            r['detail'] = 'sandbox token not provided'
+            r['detail'] = 'lack of data. post sandbox_token, ticker, lots, operation'
 
         return Response(r)
 
@@ -541,7 +547,7 @@ class CurrenciesMarketOrder(APIView):
         data = request.data
         r = response_sample.copy()
 
-        if 'sandbox_token' in data:
+        if ('sandbox_token' in data) and ('ticker' in data) and ('lots' in data) and ('operation' in data):
             try:
                 client = ti.SyncClient(data['sandbox_token'], use_sandbox=True)
                 accounts = client.get_accounts().payload.accounts
@@ -569,10 +575,13 @@ class CurrenciesMarketOrder(APIView):
                             r['detail'] = eval(e.text)['payload']['code']
                     else:
                         r['detail'] = 'invalid ticker'
-            except UnexpectedError as e:
-                r['code'] = int(str(e))
+
+            except UnexpectedError:
+                r['code'] = 401
+                r['detail'] = 'invalid sandbox_token'
         else:
             r['code'] = 400
+            r['detail'] = 'lack of data. post sandbox_token, ticker, lots, operation'
 
         return Response(r)
 
