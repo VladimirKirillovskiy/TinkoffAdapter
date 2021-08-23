@@ -130,7 +130,6 @@ def get_news_sentiment(r: dict, ticker: str):
 
         if response.status_code == 429:
             sleep(1)
-            print('too many requests')
             continue
         else:
             response = response.json()
@@ -147,8 +146,6 @@ def get_news_sentiment(r: dict, ticker: str):
 
 def get_news_company(r: dict, ticker: str, days: int) -> dict:
     url = 'https://finnhub.io/api/v1/company-news'
-
-
     params = {
         'symbol': ticker,
         'from': str(date.today() - timedelta(days=days)),
@@ -161,7 +158,6 @@ def get_news_company(r: dict, ticker: str, days: int) -> dict:
 
         if response.status_code == 429:
             sleep(1)
-            print('too many requests')
             continue
         else:
             response = response.json()
