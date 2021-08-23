@@ -21,7 +21,6 @@ class MarketStocksList(APIView):
 
     def get(self, request):
         client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
-        register = client.register_sandbox_account(ti.SandboxRegisterRequest.tinkoff())
         response = client.get_market_stocks().dict()['payload']
         stocks = response['instruments']
         r = response_sample.copy()
@@ -44,7 +43,6 @@ class MarketStocksDetail(APIView):
 
     def get(self, request, ticker):
         client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
-        register = client.register_sandbox_account(ti.SandboxRegisterRequest.tinkoff())
         response = client.get_market_search_by_ticker(ticker).dict()['payload']
         r = response_sample.copy()
 
@@ -63,7 +61,6 @@ class MarketCurrenciesList(APIView):
     
     def get(self, request):
         client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
-        register = client.register_sandbox_account(ti.SandboxRegisterRequest.tinkoff())
         data = client.get_market_currencies().dict()['payload']['instruments']
         r = response_sample.copy()
         data_json = []
@@ -89,7 +86,6 @@ class MarketCurrenciesDetail(APIView):
 
     def get(self, request, currency):
         client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
-        register = client.register_sandbox_account(ti.SandboxRegisterRequest.tinkoff())
         data = client.get_market_currencies().dict()['payload']['instruments']
         r = response_sample.copy()
         data_json = []
@@ -620,6 +616,7 @@ class MajorHolders(APIView):
         r = response_sample.copy()
         data = services.get_major_holders(r, ticker)
         return Response(data)
+
     # Поля ответа:
     # 'holder' - компания держатель акций,
     # 'shares' - количество акций в руках компании,
