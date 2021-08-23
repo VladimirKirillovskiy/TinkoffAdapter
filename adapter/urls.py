@@ -14,6 +14,7 @@ urlpatterns = [
     path('market/stocks/nextdivs/<str:ticker_name>/', ad.NextDivs.as_view(), name='next dividends'),
     path('market/stocks/recommendations/<str:ticker>/', ad.Recommendations.as_view(), name='Recommendations'),
     path('market/stocks/recommendations-days/<str:ticker>/<int:days>/', ad.RecommendationsInDays.as_view(), name='Recommendations in days'),
+    path('market/stocks/major-holders/<str:ticker>/', ad.MajorHolders.as_view(), name='Major holders'),
 
     path('market/currencies/', ad.MarketCurrenciesList.as_view(), name='currencies'),
     path('market/currencies/<str:currency>/', ad.MarketCurrenciesDetail.as_view(), name='currencies'),

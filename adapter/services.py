@@ -245,3 +245,31 @@ def get_recommendations_days(r: dict, ticker: str, days: int):
     r['payload'] = data_json
     r['total'] = len(r['payload'])
     return r
+
+
+def get_major_holders(r: dict, ticker: str):
+    tick = yf.Ticker(ticker)
+    data = tick.institutional_holders
+    data_json = []
+    if data is not None:
+        col1 = data.columns.values[0]
+        col2 = data.columns.values[1]
+        col3 = data.columns.values[2]
+        col4 = data.columns.values[3]
+        col5 = data.columns.values[4]
+        for index in data.index:
+            res = {
+                'holder': data.loc[index, col1],
+                'shares': data.loc[index, col2],
+                'date_reported': data.loc[index, col3].value // 10 ** 9,
+                '%out': round(data.loc[index, col4] * 100, 2),
+                'value': data.loc[index, col5]
+            }
+            data_json.append(res)
+    else:
+        r['code'] = 400
+        r['detail'] = 'no data'
+    r['payload'] = data_json
+    r['total'] = len(r['payload'])
+
+    return r

@@ -552,3 +552,12 @@ class RecommendationsInDays(APIView):
         r = response_sample.copy()
         data = services.get_recommendations_days(r, ticker, days)
         return Response(data)
+
+
+class MajorHolders(APIView):
+    permission_classes = [AllowAny, ]
+
+    def get(self, request, ticker):
+        r = response_sample.copy()
+        data = services.get_major_holders(r, ticker)
+        return Response(data)
