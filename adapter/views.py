@@ -109,8 +109,8 @@ class MarketCurrenciesDetail(APIView):
 class QuartEarnings(APIView):
     permission_classes = [AllowAny, ]
 
-    def get(self, request, ticker_name):
-        tick = yf.Ticker(ticker_name)
+    def get(self, request, ticker):
+        tick = yf.Ticker(ticker)
         data = tick.quarterly_earnings
         r = response_sample.copy()
         data_json = []
@@ -126,8 +126,8 @@ class QuartEarnings(APIView):
 class Info(APIView):
     permission_classes = [AllowAny, ]
 
-    def get(self, request, ticker_name):
-        tick = yf.Ticker(ticker_name)
+    def get(self, request, ticker):
+        tick = yf.Ticker(ticker)
         data = tick.info
         r = response_sample.copy()
 
@@ -163,8 +163,8 @@ class Info(APIView):
 class Dividends(APIView):
     permission_classes = [AllowAny, ]
 
-    def get(self, request, ticker_name):
-        tick = yf.Ticker(ticker_name)
+    def get(self, request, ticker):
+        tick = yf.Ticker(ticker)
         data = tick.dividends
         r = response_sample.copy()
         data_json = []
@@ -188,8 +188,8 @@ class Dividends(APIView):
 class NextDivs(APIView):
     permission_classes = [AllowAny, ]
 
-    def get(self, request, ticker_name):
-        tick = yf.Ticker(ticker_name)
+    def get(self, request, ticker):
+        tick = yf.Ticker(ticker)
         data = tick.info
         r = response_sample.copy()
 
@@ -205,8 +205,8 @@ class NextDivs(APIView):
 class NextEarns(APIView):
     permission_classes = [AllowAny, ]
 
-    def get(self, request, ticker_name):
-        tick = yf.Ticker(ticker_name)
+    def get(self, request, ticker):
+        tick = yf.Ticker(ticker)
         data = tick.calendar
         r = response_sample.copy()
         
@@ -543,6 +543,9 @@ class Recommendations(APIView):
         r = response_sample.copy()
         data = services.get_recommendations(r, ticker)
         return Response(data)
+    # Поля: 'date' - Дата рекоммендации, 'firm' - компания, давшая рекоммендацию
+    # 'to_grade' - рекоммендация изменена на, 'from_grade' - рекоммендация изменена с
+    # 'action' - суть изменения рекоммендации(Повышена, понижена, добавлена)
 
 
 class RecommendationsInDays(APIView):
@@ -552,6 +555,9 @@ class RecommendationsInDays(APIView):
         r = response_sample.copy()
         data = services.get_recommendations_days(r, ticker, days)
         return Response(data)
+    # Поля: 'date' - Дата рекоммендации, 'firm' - компания, давшая рекоммендацию
+    # 'to_grade' - рекоммендация изменена на, 'from_grade' - рекоммендация изменена с
+    # 'action' - суть изменения рекоммендации(Повышена, понижена, добавлена)
 
 
 class MajorHolders(APIView):
@@ -561,3 +567,6 @@ class MajorHolders(APIView):
         r = response_sample.copy()
         data = services.get_major_holders(r, ticker)
         return Response(data)
+    # Поля: 'holder' - Компания держатель акций, 'shares' - количество акций в руках компании
+    # 'date_reported' - дата последнего отчёта, по которому берутся данные, '%out' - процент от всех акций
+    # 'value' - общая стоимость акций
