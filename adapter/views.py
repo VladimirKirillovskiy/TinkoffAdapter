@@ -560,30 +560,38 @@ class CurrenciesMarketOrder(APIView):
             try:
                 client = ti.SyncClient(data['sandbox_token'], use_sandbox=True)
                 accounts = client.get_accounts().payload.accounts
-                broker_account_id = accounts[0].broker_account_id
-                info = client.get_market_currencies().dict()['payload']['instruments']
-                figi = None
-                
-                for item in info:
-                    if item["ticker"][:3] == data['ticker'].upper():
-                        figi = item['figi']
 
-                    if figi is not None:
-                        data_price = client.get_market_orderbook(item['figi'], 0)
-                        price = data_price.payload.last_price
-                        body = ti.LimitOrderRequest(
-                            lots=data['lots'],
-                            operation=data['operation'],
-                            price=price,
-                        )
-                        try:
-                            client.post_orders_limit_order(figi, body, broker_account_id)
-                            r['payload'] = [dict(item) for item in client.get_portfolio(broker_account_id).payload.positions]
-                            r['total'] = len(r['payload'])
-                        except UnexpectedError as e:
-                            r['detail'] = eval(e.text)['payload']['code']
-                    else:
-                        r['detail'] = 'invalid ticker'
+                if accounts[0].broker_account_type == 'Tinkoff':
+                    broker_account_id = accounts[0].broker_account_id
+                    info = client.get_market_currencies().dict()['payload']['instruments']
+                    figi = None
+
+                    for item in info:
+                        if item["ticker"][:3] == data['ticker'].upper():
+                            figi = item['figi']
+
+                        if figi is not None:
+                            data_price = client.get_market_orderbook(item['figi'], 0)
+                            price = data_price.payload.last_price
+                            body = ti.LimitOrderRequest(
+                                lots=data['lots'],
+                                operation=data['operation'],
+                                price=price,
+                            )
+                            try:
+                                client.post_orders_limit_order(figi, body, broker_account_id)
+                                r['payload'] = [dict(item) for item in client.get_portfolio(broker_account_id).payload.positions]
+                                r['total'] = len(r['payload'])
+                            except UnexpectedError as e:
+                                # r['code'] = '500'
+                                r['code'] = eval(e.text)
+                                r['detail'] = eval(e.text)['payload']['code']
+                        else:
+                            r['code'] = '500'
+                            r['detail'] = 'invalid ticker'
+                else:
+                    r['code'] = '500'
+                    r['detail'] = 'account not registered'
 
             except UnexpectedError:
                 r['code'] = 401
