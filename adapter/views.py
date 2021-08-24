@@ -587,8 +587,7 @@ class CurrenciesMarketOrder(APIView):
                                 r['payload'] = [dict(item) for item in client.get_portfolio(broker_account_id).payload.positions]
                                 r['total'] = len(r['payload'])
                             except UnexpectedError as e:
-                                # r['code'] = '500'
-                                r['code'] = eval(e.text)
+                                r['code'] = '500'
                                 r['detail'] = eval(e.text)['payload']['code']
                         else:
                             r['code'] = '500'
