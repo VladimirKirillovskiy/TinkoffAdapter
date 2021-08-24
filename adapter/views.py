@@ -21,7 +21,6 @@ class MarketStocksList(APIView):
 
     def get(self, request):
         client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
-        register = client.register_sandbox_account(ti.SandboxRegisterRequest.tinkoff())
         response = client.get_market_stocks().dict()['payload']
         stocks = response['instruments']
         r = response_sample.copy()
@@ -44,7 +43,6 @@ class MarketStocksDetail(APIView):
 
     def get(self, request, ticker):
         client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
-        register = client.register_sandbox_account(ti.SandboxRegisterRequest.tinkoff())
         response = client.get_market_search_by_ticker(ticker).dict()['payload']
         r = response_sample.copy()
 
@@ -63,7 +61,6 @@ class MarketCurrenciesList(APIView):
     
     def get(self, request):
         client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
-        register = client.register_sandbox_account(ti.SandboxRegisterRequest.tinkoff())
         data = client.get_market_currencies().dict()['payload']['instruments']
         r = response_sample.copy()
         data_json = []
@@ -89,7 +86,6 @@ class MarketCurrenciesDetail(APIView):
 
     def get(self, request, currency):
         client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
-        register = client.register_sandbox_account(ti.SandboxRegisterRequest.tinkoff())
         data = client.get_market_currencies().dict()['payload']['instruments']
         r = response_sample.copy()
         data_json = []
@@ -257,7 +253,7 @@ class SandboxAccountRegister(APIView):
 
         else:
             r['code'] = 400
-            r['detail'] = 'sandbox token not provided'
+            r['detail'] = 'lack of data. post sandbox_token'
 
         return Response(r)
 
@@ -289,7 +285,7 @@ class SandboxAccountRemove(APIView):
 
         else:
             r['code'] = 400
-            r['detail'] = 'sandbox token not provided'
+            r['detail'] = 'lack of data. post sandbox_token'
 
         return Response(r)
 
@@ -321,7 +317,7 @@ class SandboxAccountClear(APIView):
 
         else:
             r['code'] = 400
-            r['detail'] = 'sandbox token not provided'
+            r['detail'] = 'lack of data. post sandbox_token'
 
         return Response(r)
 
@@ -331,25 +327,31 @@ class SandboxSetStocks(APIView):
 
     # Поля запроса:
     # 'sandbox_token': str
-    # 'figi': str
+    # 'ticker': str
     # 'balance': int
 
     def post(self, request):
         data = request.data
         r = response_sample.copy()
 
-        if ('sandbox_token' in data) and ('figi' in data) and ('balance' in data):
+        if ('sandbox_token' in data) and ('ticker' in data) and ('balance' in data):
             try:
                 client = ti.SyncClient(data['sandbox_token'], use_sandbox=True)
                 accounts = client.get_accounts().payload.accounts
 
                 if accounts[0].broker_account_type == 'Tinkoff':
                     broker_account_id = accounts[0].broker_account_id
-                    body = ti.SandboxSetPositionBalanceRequest(
-                        balance=data['balance'],
-                        figi=data['figi'],
-                    )
-                    client.set_sandbox_positions_balance(body, broker_account_id)
+                    figi = client.get_market_search_by_ticker(data['ticker']).payload.dict()
+
+                    if figi['total'] != 0:
+                        body = ti.SandboxSetPositionBalanceRequest(
+                            balance=data['balance'],
+                            figi=figi['instruments'][0]['figi'],
+                        )
+                        client.set_sandbox_positions_balance(body, broker_account_id)
+                    else:
+                        r['code'] = '500'
+                        r['detail'] = 'invalid ticker'
 
                 else:
                     r['code'] = '500'
@@ -361,7 +363,7 @@ class SandboxSetStocks(APIView):
 
         else:
             r['code'] = 400
-            r['detail'] = 'lack of data. post sandbox_token, figi, balance'
+            r['detail'] = 'lack of data. post sandbox_token, ticker, balance'
 
         return Response(r)
 
@@ -385,11 +387,15 @@ class SandboxSetCurrencies(APIView):
 
                 if accounts[0].broker_account_type == 'Tinkoff':
                     broker_account_id = accounts[0].broker_account_id
-                    body = ti.SandboxSetCurrencyBalanceRequest(
-                        balance=data['balance'],
-                        currency=data['currency'],
-                    )
-                    client.set_sandbox_currencies_balance(body, broker_account_id)
+                    if data['currency'] in ['RUB', 'EUR', 'USD']:
+                        body = ti.SandboxSetCurrencyBalanceRequest(
+                            balance=data['balance'],
+                            currency=data['currency'],
+                        )
+                        client.set_sandbox_currencies_balance(body, broker_account_id)
+                    else:
+                        r['code'] = '500'
+                        r['detail'] = 'invalid currency'
 
                 else:
                     r['code'] = '500'
@@ -420,17 +426,25 @@ class CheckPortfolioStocks(APIView):
             try:
                 client = ti.SyncClient(data['sandbox_token'], use_sandbox=True)
                 accounts = client.get_accounts().payload.accounts
-                broker_account_id = accounts[0].broker_account_id
 
-                r['payload'] = [dict(item) for item in client.get_portfolio(broker_account_id).payload.positions]
-                r['total'] = len(r['payload'])
-            except UnexpectedError as e:
-                r['code'] = int(str(e))
+                if accounts[0].broker_account_type == 'Tinkoff':
+                    broker_account_id = accounts[0].broker_account_id
+                    r['payload'] = [dict(item) for item
+                                    in client.get_portfolio(broker_account_id).payload.positions]
+                    r['total'] = len(r['payload'])
+                else:
+                    r['code'] = '500'
+                    r['detail'] = 'account not registered'
+
+            except UnexpectedError:
+                r['code'] = 401
+                r['detail'] = 'invalid sandbox_token'
+
         else:
             r['code'] = 400
+            r['detail'] = 'lack of data. post sandbox_token'
             
         return Response(r)
-
 
 
 class CheckPortfolioCurrencies(APIView):
@@ -447,14 +461,23 @@ class CheckPortfolioCurrencies(APIView):
             try:
                 client = ti.SyncClient(data['sandbox_token'], use_sandbox=True)
                 accounts = client.get_accounts().payload.accounts
-                broker_account_id = accounts[0].broker_account_id
 
-                r['payload'] = [dict(item) for item in client.get_portfolio_currencies(broker_account_id).payload.currencies]
-                r['total'] = len(r['payload'])
-            except UnexpectedError as e:
-                r['code'] = int(str(e))
+                if accounts[0].broker_account_type == 'Tinkoff':
+                    broker_account_id = accounts[0].broker_account_id
+                    r['payload'] = [dict(item) for item
+                                    in client.get_portfolio_currencies(broker_account_id).payload.currencies]
+                    r['total'] = len(r['payload'])
+                else:
+                    r['code'] = '500'
+                    r['detail'] = 'account not registered'
+
+            except UnexpectedError:
+                r['code'] = 401
+                r['detail'] = 'invalid sandbox_token'
+
         else:
             r['code'] = 400
+            r['detail'] = 'lack of data. post sandbox_token'
 
         return Response(r)
 
@@ -475,34 +498,47 @@ class StocksMarketOrder(APIView):
         data = request.data
         r = response_sample.copy()
 
-        if 'sandbox_token' in data:
+        if ('sandbox_token' in data) and ('ticker' in data) and ('lots' in data) and ('operation' in data):
             try:
                 client = ti.SyncClient(data['sandbox_token'], use_sandbox=True)
                 accounts = client.get_accounts().payload.accounts
-                broker_account_id = accounts[0].broker_account_id
-                info = client.get_market_search_by_ticker(data['ticker']).dict()['payload']
-                
-                if info['total'] != 0:
-                    figi = info['instruments'][0]['figi']
-                    data_price = client.get_market_orderbook(figi, 0)
-                    price = data_price.payload.last_price
-                    body = ti.LimitOrderRequest(
-                        lots=data['lots'],
-                        operation=data['operation'],
-                        price=price,
-                    )
-                    try:
-                        client.post_orders_limit_order(figi, body, broker_account_id)
-                        r['payload'] = [dict(item) for item in client.get_portfolio(broker_account_id).payload.positions]
-                        r['total'] = len(r['payload'])
-                    except UnexpectedError as e:
-                        r['detail'] = eval(e.text)['payload']['code']
+
+                if accounts[0].broker_account_type == 'Tinkoff':
+                    broker_account_id = accounts[0].broker_account_id
+                    info = client.get_market_search_by_ticker(data['ticker']).dict()['payload']
+
+                    if info['total'] != 0:
+                        figi = info['instruments'][0]['figi']
+                        data_price = client.get_market_orderbook(figi, 0)
+                        price = data_price.payload.last_price
+                        body = ti.LimitOrderRequest(
+                            lots=data['lots'],
+                            operation=data['operation'],
+                            price=price,
+                        )
+                        try:
+                            client.post_orders_limit_order(figi, body, broker_account_id)
+                            r['payload'] = [dict(item) for item
+                                            in client.get_portfolio(broker_account_id).payload.positions]
+                            r['total'] = len(r['payload'])
+
+                        except UnexpectedError as e:
+                            r['code'] = 500
+                            r['detail'] = eval(e.text)['payload']['code']
+                    else:
+                        r['code'] = '500'
+                        r['detail'] = 'invalid ticker'
                 else:
-                    r['detail'] = 'invalid ticker'
-            except UnexpectedError as e:
-                r['code'] = int(str(e))
+                    r['code'] = '500'
+                    r['detail'] = 'account not registered'
+
+            except UnexpectedError:
+                r['code'] = 401
+                r['detail'] = 'invalid sandbox_token'
+
         else:
             r['code'] = 400
+            r['detail'] = 'lack of data. post sandbox_token, ticker, lots, operation'
 
         return Response(r)
 
@@ -524,38 +560,48 @@ class CurrenciesMarketOrder(APIView):
         data = request.data
         r = response_sample.copy()
 
-        if 'sandbox_token' in data:
+        if ('sandbox_token' in data) and ('ticker' in data) and ('lots' in data) and ('operation' in data):
             try:
                 client = ti.SyncClient(data['sandbox_token'], use_sandbox=True)
                 accounts = client.get_accounts().payload.accounts
-                broker_account_id = accounts[0].broker_account_id
-                info = client.get_market_currencies().dict()['payload']['instruments']
-                figi = None
-                
-                for item in info:
-                    if item["ticker"][:3] == data['ticker'].upper():
-                        figi = item['figi']
 
-                    if figi is not None:
-                        data_price = client.get_market_orderbook(item['figi'], 0)
-                        price = data_price.payload.last_price
-                        body = ti.LimitOrderRequest(
-                            lots=data['lots'],
-                            operation=data['operation'],
-                            price=price,
-                        )
-                        try:
-                            client.post_orders_limit_order(figi, body, broker_account_id)
-                            r['payload'] = [dict(item) for item in client.get_portfolio(broker_account_id).payload.positions]
-                            r['total'] = len(r['payload'])
-                        except UnexpectedError as e:
-                            r['detail'] = eval(e.text)['payload']['code']
-                    else:
-                        r['detail'] = 'invalid ticker'
-            except UnexpectedError as e:
-                r['code'] = int(str(e))
+                if accounts[0].broker_account_type == 'Tinkoff':
+                    broker_account_id = accounts[0].broker_account_id
+                    info = client.get_market_currencies().dict()['payload']['instruments']
+                    figi = None
+
+                    for item in info:
+                        if item["ticker"][:3] == data['ticker'].upper():
+                            figi = item['figi']
+
+                        if figi is not None:
+                            data_price = client.get_market_orderbook(item['figi'], 0)
+                            price = data_price.payload.last_price
+                            body = ti.LimitOrderRequest(
+                                lots=data['lots'],
+                                operation=data['operation'],
+                                price=price,
+                            )
+                            try:
+                                client.post_orders_limit_order(figi, body, broker_account_id)
+                                r['payload'] = [dict(item) for item in client.get_portfolio(broker_account_id).payload.positions]
+                                r['total'] = len(r['payload'])
+                            except UnexpectedError as e:
+                                r['code'] = '500'
+                                r['detail'] = eval(e.text)['payload']['code']
+                        else:
+                            r['code'] = '500'
+                            r['detail'] = 'invalid ticker'
+                else:
+                    r['code'] = '500'
+                    r['detail'] = 'account not registered'
+
+            except UnexpectedError:
+                r['code'] = 401
+                r['detail'] = 'invalid sandbox_token'
         else:
             r['code'] = 400
+            r['detail'] = 'lack of data. post sandbox_token, ticker, lots, operation'
 
         return Response(r)
 
@@ -619,6 +665,7 @@ class MajorHolders(APIView):
         r = response_sample.copy()
         data = services.get_major_holders(r, ticker)
         return Response(data)
+
     # Поля ответа:
     # 'holder' - компания держатель акций,
     # 'shares' - количество акций в руках компании,
