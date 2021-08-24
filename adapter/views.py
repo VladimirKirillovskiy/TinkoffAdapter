@@ -373,7 +373,7 @@ class SandboxSetCurrencies(APIView):
 
     # Поля запроса:
     # 'sandbox_token': str
-    # 'currency': str
+    # 'currency': str - 'RUB', 'EUR' or 'USD
     # 'balance': int
 
     def post(self, request):
