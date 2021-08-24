@@ -640,9 +640,13 @@ class CurrenciesMarketOrder(APIView):
                                 r['payload'] = [dict(item) for item in client.get_portfolio(broker_account_id).payload.positions]
                                 r['total'] = len(r['payload'])
                             except UnexpectedError as e:
+<<<<<<< HEAD
                                 logger.warning('currencies_market_order: '+ e.text)
                                 # r['code'] = '500'
                                 r['code'] = eval(e.text)
+=======
+                                r['code'] = '500'
+>>>>>>> 27ecf7676e748a2885813c625d8a473fd8a71fad
                                 r['detail'] = eval(e.text)['payload']['code']
                         else:
                             logger.warning('currencies_market_order: invalid ticker')
