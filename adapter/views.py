@@ -8,6 +8,8 @@ import yfinance as yf
 import adapter.services as services
 
 
+logger = logging.getLogger('root')
+
 response_sample = {
     'code': 200,
     'detail': 'ok',
@@ -21,19 +23,25 @@ class MarketStocksList(APIView):
 
     def get(self, request):
         client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
-        response = client.get_market_stocks().dict()['payload']
-        stocks = response['instruments']
-        r = response_sample.copy()
+        try:
+            response = client.get_market_stocks().dict()['payload']
+            stocks = response['instruments']
+            r = response_sample.copy()
 
-        for item in stocks:
-            res = {
-                'name': item['name'],
-                'ticker': item['ticker'],
-                'currency': item['currency'],
-            }
-            r['payload'].append(res)
+            for item in stocks:
+                res = {
+                    'name': item['name'],
+                    'ticker': item['ticker'],
+                    'currency': item['currency'],
+                }
+                r['payload'].append(res)
 
-        r['total'] = int(response['total'])
+            r['total'] = int(response['total'])
+
+        except UnexpectedError as e:
+            logger.warning('marketall: ' + e.text)
+            r['code'] = 500
+            r['detail'] = eval(e.text)['payload']['code']
 
         return Response(r)
 
@@ -43,15 +51,21 @@ class MarketStocksDetail(APIView):
 
     def get(self, request, ticker):
         client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
-        response = client.get_market_search_by_ticker(ticker).dict()['payload']
-        r = response_sample.copy()
+        try:
+            response = client.get_market_search_by_ticker(ticker).dict()['payload']
+            r = response_sample.copy()
 
-        if response['total'] != 0:
-            response = response['instruments'][0]
-            data_price = client.get_market_orderbook(response['figi'], 0)
-            response['last_price'] = data_price.dict()['payload']['last_price']
-            r['payload'] = [response]
-            r['total'] = len(r['payload'])
+            if response['total'] != 0:
+                response = response['instruments'][0]
+                data_price = client.get_market_orderbook(response['figi'], 0)
+                response['last_price'] = data_price.dict()['payload']['last_price']
+                r['payload'] = [response]
+                r['total'] = len(r['payload'])
+
+        except UnexpectedError as e:
+            logger.warning('marketstock: ' + e.text)
+            r['code'] = 500
+            r['detail'] = eval(e.text)['payload']['code']
 
         return Response(r)
 
@@ -61,22 +75,28 @@ class MarketCurrenciesList(APIView):
     
     def get(self, request):
         client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
-        data = client.get_market_currencies().dict()['payload']['instruments']
-        r = response_sample.copy()
-        data_json = []
+        try:
+            data = client.get_market_currencies().dict()['payload']['instruments']
+            r = response_sample.copy()
+            data_json = []
 
-        for item in data:
-            data_price = client.get_market_orderbook(item['figi'], 0)
-            res = {
-                'name': item['name'],
-                'ticker': item['ticker'],
-                'currency': item['currency'],
-                'last_price': data_price.dict()['payload']['last_price']
-            }
-            data_json.append(res)
-        
-        r['payload'] = data_json
-        r['total'] = len(r['payload'])
+            for item in data:
+                data_price = client.get_market_orderbook(item['figi'], 0)
+                res = {
+                    'name': item['name'],
+                    'ticker': item['ticker'],
+                    'currency': item['currency'],
+                    'last_price': data_price.dict()['payload']['last_price']
+                }
+                data_json.append(res)
+
+            r['payload'] = data_json
+            r['total'] = len(r['payload'])
+
+        except UnexpectedError as e:
+            logger.warning('currencies: ' + e.text)
+            r['code'] = 500
+            r['detail'] = eval(e.text)['payload']['code']
 
         return Response(r)
 
@@ -86,18 +106,24 @@ class MarketCurrenciesDetail(APIView):
 
     def get(self, request, currency):
         client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
-        data = client.get_market_currencies().dict()['payload']['instruments']
-        r = response_sample.copy()
-        data_json = []
+        try:
+            data = client.get_market_currencies().dict()['payload']['instruments']
+            r = response_sample.copy()
+            data_json = []
 
-        for item in data:
-            if item["ticker"][:3] == currency.upper():
-                data_price = client.get_market_orderbook(item['figi'], 0)
-                item['last_price'] = data_price.dict()['payload']['last_price']
-                data_json += [item]
+            for item in data:
+                if item["ticker"][:3] == currency.upper():
+                    data_price = client.get_market_orderbook(item['figi'], 0)
+                    item['last_price'] = data_price.dict()['payload']['last_price']
+                    data_json += [item]
 
-        r['payload'] = data_json
-        r['total'] = len(r['payload'])
+            r['payload'] = data_json
+            r['total'] = len(r['payload'])
+
+        except UnexpectedError as e:
+            logger.warning('currencies: ' + e.text)
+            r['code'] = 500
+            r['detail'] = eval(e.text)['payload']['code']
 
         return Response(r)
 
@@ -248,10 +274,12 @@ class SandboxAccountRegister(APIView):
                 }]
 
             except UnexpectedError:
+                logger.warning('sandbox_register: invalid sandbox_token')
                 r['code'] = 401
                 r['detail'] = 'invalid sandbox_token'
 
         else:
+            logger.warning('sandbox_register: lack of data. post sandbox_token')
             r['code'] = 400
             r['detail'] = 'lack of data. post sandbox_token'
 
@@ -276,14 +304,17 @@ class SandboxAccountRemove(APIView):
                 if accounts[0].broker_account_type == 'Tinkoff':
                     client.remove_sandbox_account(accounts[0].broker_account_id)
                 else:
+                    logger.warning('sandbox_remove: account not registered')
                     r['code'] = '500'
                     r['detail'] = 'account not registered'
 
             except UnexpectedError:
+                logger.warning('sandbox_remove: invalid sandbox_token')
                 r['code'] = 401
                 r['detail'] = 'invalid sandbox_token'
 
         else:
+            logger.warning('sandbox_remove: lack of data. post sandbox_token')
             r['code'] = 400
             r['detail'] = 'lack of data. post sandbox_token'
 
@@ -308,14 +339,17 @@ class SandboxAccountClear(APIView):
                 if accounts[0].broker_account_type == 'Tinkoff':
                     client.clear_sandbox_account(accounts[0].broker_account_id)
                 else:
+                    logger.warning('sandbox_clear: account not registered')
                     r['code'] = '500'
                     r['detail'] = 'account not registered'
 
             except UnexpectedError:
+                logger.warning('sandbox_clear: invalid sandbox_token')
                 r['code'] = 401
                 r['detail'] = 'invalid sandbox_token'
 
         else:
+            logger.warning('sandbox_clear: lack of data. post sandbox_token')
             r['code'] = 400
             r['detail'] = 'lack of data. post sandbox_token'
 
@@ -350,18 +384,22 @@ class SandboxSetStocks(APIView):
                         )
                         client.set_sandbox_positions_balance(body, broker_account_id)
                     else:
+                        logger.warning('sandbox_stock: invalid ticker')
                         r['code'] = '500'
                         r['detail'] = 'invalid ticker'
 
                 else:
+                    logger.warning('sandbox_stock: account not registered')
                     r['code'] = '500'
                     r['detail'] = 'account not registered'
 
             except UnexpectedError:
+                logger.warning('sandbox_stock: invalid sandbox_token')
                 r['code'] = 401
                 r['detail'] = 'invalid sandbox_token'
 
         else:
+            logger.warning('sandbox_stock: lack of data. post sandbox_token, ticker, balance')
             r['code'] = 400
             r['detail'] = 'lack of data. post sandbox_token, ticker, balance'
 
@@ -394,18 +432,22 @@ class SandboxSetCurrencies(APIView):
                         )
                         client.set_sandbox_currencies_balance(body, broker_account_id)
                     else:
+                        logger.warning('sandbox_currency: invalid currency')
                         r['code'] = '500'
                         r['detail'] = 'invalid currency'
 
                 else:
+                    logger.warning('sandbox_currency: account not registered')
                     r['code'] = '500'
                     r['detail'] = 'account not registered'
 
             except UnexpectedError:
+                logger.warning('sandbox_currency: invalid sandbox_token')
                 r['code'] = 401
                 r['detail'] = 'invalid sandbox_token'
 
         else:
+            logger.warning('sandbox_currency: lack of data. post sandbox_token, currency, balance')
             r['code'] = 400
             r['detail'] = 'lack of data. post sandbox_token, currency, balance'
 
@@ -433,14 +475,17 @@ class CheckPortfolioStocks(APIView):
                                     in client.get_portfolio(broker_account_id).payload.positions]
                     r['total'] = len(r['payload'])
                 else:
+                    logger.warning('sandbox_stocks: account not registered')
                     r['code'] = '500'
                     r['detail'] = 'account not registered'
 
             except UnexpectedError:
+                logger.warning('sandbox_stocks: invalid sandbox_token')
                 r['code'] = 401
                 r['detail'] = 'invalid sandbox_token'
 
         else:
+            logger.warning('sandbox_stocks: lack of data. post sandbox_token')
             r['code'] = 400
             r['detail'] = 'lack of data. post sandbox_token'
             
@@ -468,14 +513,17 @@ class CheckPortfolioCurrencies(APIView):
                                     in client.get_portfolio_currencies(broker_account_id).payload.currencies]
                     r['total'] = len(r['payload'])
                 else:
+                    logger.warning('sandbox_currencies: account not registered')
                     r['code'] = '500'
                     r['detail'] = 'account not registered'
 
             except UnexpectedError:
+                logger.warning('sandbox_currencies: invalid sandbox_token')
                 r['code'] = 401
                 r['detail'] = 'invalid sandbox_token'
 
         else:
+            logger.warning('sandbox_currencies: lack of data. post sandbox_token')
             r['code'] = 400
             r['detail'] = 'lack of data. post sandbox_token'
 
@@ -523,20 +571,25 @@ class StocksMarketOrder(APIView):
                             r['total'] = len(r['payload'])
 
                         except UnexpectedError as e:
+                            logger.warning('sandbox_stocks_market_order: ' + e.text)
                             r['code'] = 500
                             r['detail'] = eval(e.text)['payload']['code']
                     else:
+                        logger.warning('sandbox_stocks_market_order: invalid ticker')
                         r['code'] = '500'
                         r['detail'] = 'invalid ticker'
                 else:
+                    logger.warning('sandbox_stocks_market_order: account not registered')
                     r['code'] = '500'
                     r['detail'] = 'account not registered'
 
             except UnexpectedError:
+                logger.warning('sandbox_stocks_market_order: invalid sandbox_token')
                 r['code'] = 401
                 r['detail'] = 'invalid sandbox_token'
 
         else:
+            logger.warning('sandbox_stocks_market_order: lack of data. post sandbox_token, ticker, lots, operation')
             r['code'] = 400
             r['detail'] = 'lack of data. post sandbox_token, ticker, lots, operation'
 
@@ -587,20 +640,25 @@ class CurrenciesMarketOrder(APIView):
                                 r['payload'] = [dict(item) for item in client.get_portfolio(broker_account_id).payload.positions]
                                 r['total'] = len(r['payload'])
                             except UnexpectedError as e:
+                                logger.warning('currencies_market_order: '+ e.text)
                                 # r['code'] = '500'
                                 r['code'] = eval(e.text)
                                 r['detail'] = eval(e.text)['payload']['code']
                         else:
+                            logger.warning('currencies_market_order: invalid ticker')
                             r['code'] = '500'
                             r['detail'] = 'invalid ticker'
                 else:
+                    logger.warning('currencies_market_order: account not registered')
                     r['code'] = '500'
                     r['detail'] = 'account not registered'
 
             except UnexpectedError:
+                logger.warning('currencies_market_order: invalid sandbox_token')
                 r['code'] = 401
                 r['detail'] = 'invalid sandbox_token'
         else:
+            logger.warning('currencies_market_order: lack of data. post sandbox_token, ticker, lots, operation')
             r['code'] = 400
             r['detail'] = 'lack of data. post sandbox_token, ticker, lots, operation'
 
