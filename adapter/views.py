@@ -563,7 +563,7 @@ class SandboxSetCurrencies(APIView):
     **sandbox_token** : string
         Описание переменной: токен песочницы
 
-    **currency** : string
+    **currency** : string ("RUB", "EUR", "USD")
         Описание переменной: определение тикера валюты
 
     **balance** : decimal
