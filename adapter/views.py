@@ -6,6 +6,7 @@ import tinvest as ti
 from tinvest.exceptions import UnexpectedError
 import yfinance as yf
 import adapter.services as services
+import logging
 
 
 logger = logging.getLogger('root')
@@ -22,11 +23,11 @@ class MarketStocksList(APIView):
     permission_classes = [AllowAny, ]
 
     def get(self, request):
-        client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
+        r = response_sample.copy()
         try:
+            client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
             response = client.get_market_stocks().dict()['payload']
             stocks = response['instruments']
-            r = response_sample.copy()
 
             for item in stocks:
                 res = {
@@ -50,10 +51,10 @@ class MarketStocksDetail(APIView):
     permission_classes = [AllowAny, ]
 
     def get(self, request, ticker):
-        client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
+        r = response_sample.copy()
         try:
+            client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
             response = client.get_market_search_by_ticker(ticker).dict()['payload']
-            r = response_sample.copy()
 
             if response['total'] != 0:
                 response = response['instruments'][0]
@@ -61,6 +62,11 @@ class MarketStocksDetail(APIView):
                 response['last_price'] = data_price.dict()['payload']['last_price']
                 r['payload'] = [response]
                 r['total'] = len(r['payload'])
+
+            else:
+                logger.warning('marketstock: invalid ticker')
+                r['code'] = '500'
+                r['detail'] = 'invalid ticker'
 
         except UnexpectedError as e:
             logger.warning('marketstock: ' + e.text)
@@ -74,10 +80,10 @@ class MarketCurrenciesList(APIView):
     permission_classes = [AllowAny, ]
     
     def get(self, request):
-        client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
+        r = response_sample.copy()
         try:
+            client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
             data = client.get_market_currencies().dict()['payload']['instruments']
-            r = response_sample.copy()
             data_json = []
 
             for item in data:
@@ -94,7 +100,7 @@ class MarketCurrenciesList(APIView):
             r['total'] = len(r['payload'])
 
         except UnexpectedError as e:
-            logger.warning('currencies: ' + e.text)
+            logger.warning('currencies_list: ' + e.text)
             r['code'] = 500
             r['detail'] = eval(e.text)['payload']['code']
 
@@ -105,23 +111,28 @@ class MarketCurrenciesDetail(APIView):
     permission_classes = [AllowAny, ]
 
     def get(self, request, currency):
-        client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
+        r = response_sample.copy()
         try:
-            data = client.get_market_currencies().dict()['payload']['instruments']
-            r = response_sample.copy()
+            client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
+            data = client.get_market_currencies().dict()['payload']
             data_json = []
 
-            for item in data:
+            for item in data['instruments']:
                 if item["ticker"][:3] == currency.upper():
                     data_price = client.get_market_orderbook(item['figi'], 0)
                     item['last_price'] = data_price.dict()['payload']['last_price']
                     data_json += [item]
 
-            r['payload'] = data_json
-            r['total'] = len(r['payload'])
+            if len(data_json) != 0:
+                r['payload'] = data_json
+                r['total'] = len(r['payload'])
+            else:
+                logger.warning('currencies_detail: invalid ticker')
+                r['code'] = '500'
+                r['detail'] = 'invalid ticker'
 
         except UnexpectedError as e:
-            logger.warning('currencies: ' + e.text)
+            logger.warning('currencies_detail: ' + e.text)
             r['code'] = 500
             r['detail'] = eval(e.text)['payload']['code']
 
@@ -637,16 +648,12 @@ class CurrenciesMarketOrder(APIView):
                             )
                             try:
                                 client.post_orders_limit_order(figi, body, broker_account_id)
-                                r['payload'] = [dict(item) for item in client.get_portfolio(broker_account_id).payload.positions]
+                                r['payload'] = [dict(item) for item
+                                                in client.get_portfolio(broker_account_id).payload.positions]
                                 r['total'] = len(r['payload'])
                             except UnexpectedError as e:
-<<<<<<< HEAD
                                 logger.warning('currencies_market_order: '+ e.text)
-                                # r['code'] = '500'
-                                r['code'] = eval(e.text)
-=======
                                 r['code'] = '500'
->>>>>>> 27ecf7676e748a2885813c625d8a473fd8a71fad
                                 r['detail'] = eval(e.text)['payload']['code']
                         else:
                             logger.warning('currencies_market_order: invalid ticker')
