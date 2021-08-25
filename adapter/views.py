@@ -56,7 +56,7 @@ class MarketStocksDetail(APIView):
     Parameters
     ----------
     
-    ticker : string
+    **ticker** : string
         Описание переменной: название тикера
 
     """
@@ -121,7 +121,7 @@ class MarketCurrenciesDetail(APIView):
 
     Parameters
     ----------
-    currency : RUB
+    **currency** : string
         Описание переменной: название валюты
 
     """
@@ -153,7 +153,7 @@ class QuartEarnings(APIView):
 
     Parameters
     ----------
-    ticker : string
+    **ticker** : string
         Описание переменной: название тикера
     
     """ 
@@ -180,7 +180,7 @@ class Info(APIView):
 
     Parameters
     ----------
-    ticker : string
+    **ticker** : string
         Описание переменной: название тикера
     
     """    
@@ -227,7 +227,7 @@ class Dividends(APIView):
 
     Parameters
     ----------
-    ticker : string
+    **ticker** : string
         Описание переменной: название тикера
     
     """ 
@@ -263,7 +263,7 @@ class NextDivs(APIView):
 
     Parameters
     ----------
-    ticker : string
+    **ticker** : string
         Описание переменной: название тикера
     
     """ 
@@ -290,7 +290,7 @@ class NextEarns(APIView):
 
     Parameters
     ----------
-    ticker : string
+    **ticker** : string
         Описание переменной: название тикера
     
     """
@@ -322,8 +322,11 @@ class Insiders(APIView):
 
     Parameters
     ----------
-    ticker : string
+    **ticker** : string
         Описание переменной: название тикера
+
+    (*optional*) **days** : integer
+        Описание переменной: количество дней (по умолчанию 10)
     
     """    
     permission_classes = [AllowAny,]
@@ -341,14 +344,11 @@ class SandboxAccountRegister(APIView):
 
     Parameters
     ----------
-    sandbox_token : string
+    **sandbox_token** : string
         Описание переменной: токен песочницы
     
     """ 
     permission_classes = [AllowAny, ]
-
-    # Поля запроса:
-    # 'sandbox_token': str
 
     def post(self, request):
         data = request.data
@@ -380,14 +380,11 @@ class SandboxAccountRemove(APIView):
 
     Parameters
     ----------
-    sandbox_token : string
+    **sandbox_token** : string
         Описание переменной: токен песочницы
     
     """ 
     permission_classes = [AllowAny, ]
-
-    # Поля запроса:
-    # 'sandbox_token': str
 
     def post(self, request):
         data = request.data
@@ -422,14 +419,11 @@ class SandboxAccountClear(APIView):
 
     Parameters
     ----------
-    sandbox_token : string
+    **sandbox_token** : string
         Описание переменной: токен песочницы
     
     """
     permission_classes = [AllowAny, ]
-
-    # Поля запроса:
-    # 'sandbox_token': str
 
     def post(self, request):
         data = request.data
@@ -459,24 +453,22 @@ class SandboxAccountClear(APIView):
 
 class SandboxSetStocks(APIView):
     """
-    
+
     Выставление баланса по инструметным позициям
 
     Parameters
     ----------
-    sandbox_token : string
+    **sandbox_token** : string
         Описание переменной: токен песочницы
-    figi: string
-        Описание переменной: код актива 
-    balance: int
+
+    **ticker** : string
+        Описание переменной: определение тикера
+
+    **balance** : decimal
         Описание переменной: определение баланса
     """
-    permission_classes = [AllowAny, ]
 
-    # Поля запроса:
-    # 'sandbox_token': str
-    # 'figi': str
-    # 'balance': int
+    permission_classes = [AllowAny, ]
 
     def post(self, request):
         data = request.data
@@ -512,25 +504,22 @@ class SandboxSetStocks(APIView):
 
 class SandboxSetCurrencies(APIView):
     """
-    
+
     Выставление баланса по валютным позициям из "песочницы"
 
     Parameters
     ----------
-    sandbox_token : string
+    **sandbox_token** : string
         Описание переменной: токен песочницы
-    currency: string
-        Описание переменной: определение валюты
-    balance: integer
-        Описание переменной: определение баланса
-    
-    """
-    permission_classes = [AllowAny, ]
 
-    # Поля запроса:
-    # 'sandbox_token': str
-    # 'currency': str
-    # 'balance': int
+    **currency** : string
+        Описание переменной: определение тикера валюты
+
+    **balance** : decimal
+        Описание переменной: определение баланса
+    """
+
+    permission_classes = [AllowAny, ]
 
     def post(self, request):
         data = request.data
@@ -571,14 +560,11 @@ class CheckPortfolioStocks(APIView):
 
     Parameters
     ----------
-    sandbox_token : string
+    **sandbox_token** : string
         Описание переменной: токен песочницы
     
     """    
     permission_classes = [AllowAny, ]
-
-    # Поля запроса:
-    # 'sandbox_token': str
 
     def post(self, request):
         data = request.data
@@ -608,14 +594,11 @@ class CheckPortfolioCurrencies(APIView):
 
     Parameters
     ----------
-    sandbox_token : string
+    **sandbox_token** : string
         Описание переменной: токен песочницы
     
     """
     permission_classes = [AllowAny, ]
-
-    # Поля запроса:
-    # 'sandbox_token': str
 
     def post(self, request):
         data = request.data
@@ -644,13 +627,17 @@ class StocksMarketOrder(APIView):
 
     Parameters
     ----------
-    sandbox_token : string
+    **sandbox_token** : string
         Описание переменной: токен песочницы
-    ticker : string
-        Описание переменной: определение тикета
-    lots : integer
+
+    **ticker** : string
+        Описание переменной: определение тикера
+
+    **lots** : integer
         Описание переменной: определение лотов
-    operation : string ("Buy", "Sell")
+
+    **operation** : string ("Buy", "Sell")
+        Описание переменной: определение операции
     
     """
     
@@ -658,12 +645,6 @@ class StocksMarketOrder(APIView):
 
     # Сначала смотрится текущая цена, потом создается лимитная заявка по текущей цене.
     # Потому что в Sandbox "Все рыночные поручения исполняются по фиксированной цене в 100"
-
-    # Поля запроса:
-    # 'sandbox_token': str
-    # 'ticker': str
-    # 'lots': int
-    # 'operation': str - 'Buy' or 'Sell'
 
     def post(self, request):
         data = request.data
@@ -708,13 +689,17 @@ class CurrenciesMarketOrder(APIView):
 
     Parameters
     ----------
-    sandbox_token : string
+    **sandbox_token** : string
         Описание переменной: токен песочницы
-    ticker : string
-        Описание переменной: определение тикета
-    lots : integer
+
+    **ticker** : string
+        Описание переменной: определение тикера
+
+    **lots** : integer
         Описание переменной: определение лотов
-    operation : string ("Buy", "Sell")
+
+    **operation** : string ("Buy", "Sell")
+        Описание переменной: определение операции
     
     """
     permission_classes = [AllowAny, ]
@@ -722,12 +707,6 @@ class CurrenciesMarketOrder(APIView):
     # 1 лот = 2000 единиц валюты
     # Сначала смотрится текущая цена, потом создается лимитная заявка по текущей цене.
     # Потому что в Sandbox "Все рыночные поручения исполняются по фиксированной цене в 100"
-
-    # Поля запроса:
-    # 'sandbox_token': str
-    # 'ticker': str
-    # 'lots': int
-    # 'operation': str - 'Buy' or 'Sell'
 
     def post(self, request):
         data = request.data
@@ -776,8 +755,8 @@ class NewsSentiment(APIView):
 
     Parameters
     ----------
-    ticker : string
-        Описание переменной: определение тикета
+    **ticker** : string
+        Описание переменной: определение тикера
     
     """
     permission_classes = [AllowAny, ]
@@ -796,8 +775,11 @@ class NewsCompany(APIView):
 
     Parameters
     ----------
-    ticker : string
-        Описание переменной: определение тикета
+    **ticker** : string
+        Описание переменной: определение тикера
+
+    (*optional*) **days** : integer
+        Описание переменной: количество дней (по умолчанию 10)
     
     """
     permission_classes = [AllowAny, ]
@@ -816,8 +798,8 @@ class Recommendations(APIView):
 
     Parameters
     ----------
-    ticker : string
-        Описание переменной: определение тикета
+    **ticker** : string
+        Описание переменной: определение тикера
     
     """
     permission_classes = [AllowAny, ]
@@ -842,8 +824,8 @@ class RecommendationsInDays(APIView):
 
     Parameters
     ----------
-    ticker : string
-        Описание переменной: определение тикета
+    **ticker** : string
+        Описание переменной: определение тикера
     
     """
     permission_classes = [AllowAny, ]
@@ -868,8 +850,8 @@ class MajorHolders(APIView):
 
     Parameters
     ----------
-    ticker : string
-        Описание переменной: определение тикета
+    **ticker** : string
+        Описание переменной: определение тикера
     
     """
     permission_classes = [AllowAny, ]
