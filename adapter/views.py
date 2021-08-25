@@ -114,10 +114,10 @@ class MarketCurrenciesDetail(APIView):
         r = response_sample.copy()
         try:
             client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
-            data = client.get_market_currencies().dict()['payload']
+            data = client.get_market_currencies().dict()['payload']['instruments']
             data_json = []
 
-            for item in data['instruments']:
+            for item in data:
                 if item["ticker"][:3] == currency.upper():
                     data_price = client.get_market_orderbook(item['figi'], 0)
                     item['last_price'] = data_price.dict()['payload']['last_price']
