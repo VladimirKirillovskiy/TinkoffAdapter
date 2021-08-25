@@ -890,7 +890,7 @@ class NewsSentiment(APIView):
 class NewsCompany(APIView):
     """
     
-    Получение новостей на предмет движения рынка по тикеру
+    Получение новостей компании по тикеру
 
     Parameters
     ----------
