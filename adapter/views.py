@@ -11,12 +11,15 @@ import logging
 
 logger = logging.getLogger('root')
 
-response_sample = {
-    'code': 200,
-    'detail': 'ok',
-    'payload': [],
-    'total': 0,
-}
+
+def get_response_sample():
+    response_sample = {
+        'code': 200,
+        'detail': 'ok',
+        'payload': [],
+        'total': 0,
+    }
+    return response_sample
 
 
 class MarketStocksList(APIView):
@@ -31,7 +34,7 @@ class MarketStocksList(APIView):
     permission_classes = [AllowAny, ]
 
     def get(self, request):
-        r = response_sample.copy()
+        r = get_response_sample()
         try:
             client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
             response = client.get_market_stocks().dict()['payload']
@@ -71,7 +74,7 @@ class MarketStocksDetail(APIView):
     permission_classes = [AllowAny, ]
 
     def get(self, request, ticker):
-        r = response_sample.copy()
+        r = get_response_sample()
         try:
             client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
             response = client.get_market_search_by_ticker(ticker).dict()['payload']
@@ -110,7 +113,7 @@ class MarketCurrenciesList(APIView):
     permission_classes = [AllowAny, ]
     
     def get(self, request):
-        r = response_sample.copy()
+        r = get_response_sample()
         try:
             client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
             data = client.get_market_currencies().dict()['payload']['instruments']
@@ -151,7 +154,7 @@ class MarketCurrenciesDetail(APIView):
     permission_classes = [AllowAny, ]
 
     def get(self, request, currency):
-        r = response_sample.copy()
+        r = get_response_sample()
         try:
             client = ti.SyncClient(SANDBOX_TOKEN, use_sandbox=True)
             data = client.get_market_currencies().dict()['payload']['instruments']
@@ -195,7 +198,7 @@ class QuartEarnings(APIView):
     def get(self, request, ticker):
         tick = yf.Ticker(ticker)
         data = tick.quarterly_earnings
-        r = response_sample.copy()
+        r = get_response_sample()
         data_json = []
 
         if data is not None:
@@ -222,7 +225,7 @@ class Info(APIView):
     def get(self, request, ticker):
         tick = yf.Ticker(ticker)
         data = tick.info
-        r = response_sample.copy()
+        r = get_response_sample()
 
         if len(data) > 2:
             if data['trailingEps'] != None:
@@ -256,7 +259,7 @@ class Info(APIView):
 class Dividends(APIView):
     """
     
-    Получение списка дивидендов по тикету
+    Получение списка дивидендов по тикеру
 
     Parameters
     ----------
@@ -270,7 +273,7 @@ class Dividends(APIView):
     def get(self, request, ticker):
         tick = yf.Ticker(ticker)
         data = tick.dividends
-        r = response_sample.copy()
+        r = get_response_sample()
         data_json = []
 
         if len(data) > 0:
@@ -292,7 +295,7 @@ class Dividends(APIView):
 class NextDivs(APIView):
     """
     
-    Получение следующего дивиденда по тикету
+    Получение следующего дивиденда по тикеру
 
     Parameters
     ----------
@@ -305,7 +308,7 @@ class NextDivs(APIView):
     def get(self, request, ticker):
         tick = yf.Ticker(ticker)
         data = tick.info
-        r = response_sample.copy()
+        r = get_response_sample()
 
         if len(data) > 2:
             time = data['exDividendDate']
@@ -319,7 +322,7 @@ class NextDivs(APIView):
 class NextEarns(APIView):
     """
     
-    Получение следующей прибыли по тикету
+    Получение следующей прибыли по тикеру
 
     Parameters
     ----------
@@ -332,7 +335,7 @@ class NextEarns(APIView):
     def get(self, request, ticker):
         tick = yf.Ticker(ticker)
         data = tick.calendar
-        r = response_sample.copy()
+        r = get_response_sample()
         
         if data is not None:
             col = data.columns.values[1]
@@ -351,7 +354,7 @@ class NextEarns(APIView):
 class Insiders(APIView):
     """
     
-    Получение инсайдерской информации по тикету или по тикету/периода времени 
+    Получение инсайдерской информации по тикеру или по тикеру/периода времени
 
     Parameters
     ----------
@@ -365,7 +368,7 @@ class Insiders(APIView):
     permission_classes = [AllowAny,]
 
     def get(self, request, ticker, days=10):
-        r = response_sample.copy()
+        r = get_response_sample()
         data = services.get_insiders(r, ticker, days)
         return Response(services.pd_insiders(data))
 
@@ -385,7 +388,7 @@ class SandboxAccountRegister(APIView):
 
     def post(self, request):
         data = request.data
-        r = response_sample.copy()
+        r = get_response_sample()
 
         if 'sandbox_token' in data:
             try:
@@ -423,7 +426,7 @@ class SandboxAccountRemove(APIView):
 
     def post(self, request):
         data = request.data
-        r = response_sample.copy()
+        r = get_response_sample()
 
         if 'sandbox_token' in data:
             try:
@@ -465,7 +468,7 @@ class SandboxAccountClear(APIView):
 
     def post(self, request):
         data = request.data
-        r = response_sample.copy()
+        r = get_response_sample()
 
         if 'sandbox_token' in data:
             try:
@@ -513,7 +516,7 @@ class SandboxSetStocks(APIView):
 
     def post(self, request):
         data = request.data
-        r = response_sample.copy()
+        r = get_response_sample()
 
         if ('sandbox_token' in data) and ('ticker' in data) and ('balance' in data):
             try:
@@ -574,7 +577,7 @@ class SandboxSetCurrencies(APIView):
 
     def post(self, request):
         data = request.data
-        r = response_sample.copy()
+        r = get_response_sample()
 
         if ('sandbox_token' in data) and ('currency' in data) and ('balance' in data):
             try:
@@ -627,7 +630,7 @@ class CheckPortfolioStocks(APIView):
 
     def post(self, request):
         data = request.data
-        r = response_sample.copy()
+        r = get_response_sample()
 
         if 'sandbox_token' in data:
             try:
@@ -672,7 +675,7 @@ class CheckPortfolioCurrencies(APIView):
 
     def post(self, request):
         data = request.data
-        r = response_sample.copy()
+        r = get_response_sample()
 
         if 'sandbox_token' in data:
             try:
@@ -730,7 +733,7 @@ class StocksMarketOrder(APIView):
 
     def post(self, request):
         data = request.data
-        r = response_sample.copy()
+        r = get_response_sample()
 
         if ('sandbox_token' in data) and ('ticker' in data) and ('lots' in data) and ('operation' in data):
             try:
@@ -810,7 +813,7 @@ class CurrenciesMarketOrder(APIView):
 
     def post(self, request):
         data = request.data
-        r = response_sample.copy()
+        r = get_response_sample()
 
         if ('sandbox_token' in data) and ('ticker' in data) and ('lots' in data) and ('operation' in data):
             try:
@@ -867,7 +870,7 @@ class CurrenciesMarketOrder(APIView):
 class NewsSentiment(APIView):
     """
     
-    Получение анализа новостей на предмет движения рынка по тикету
+    Получение анализа новостей на предмет движения рынка по тикеру
 
     Parameters
     ----------
@@ -878,7 +881,7 @@ class NewsSentiment(APIView):
     permission_classes = [AllowAny, ]
 
     def get(self, request, ticker):
-        r = response_sample.copy()
+        r = get_response_sample()
         data = services.get_news_sentiment(r, ticker.upper())
 
         return Response(data)
@@ -887,7 +890,7 @@ class NewsSentiment(APIView):
 class NewsCompany(APIView):
     """
     
-    Получение анализа новостей на предмет движения рынка по тикету
+    Получение анализа новостей на предмет движения рынка по тикеру
 
     Parameters
     ----------
@@ -901,7 +904,7 @@ class NewsCompany(APIView):
     permission_classes = [AllowAny, ]
 
     def get(self, request, ticker, days=10):
-        r = response_sample.copy()
+        r = get_response_sample()
         data = services.get_news_company(r, ticker.upper(), days)
 
         return Response(data)
@@ -910,7 +913,7 @@ class NewsCompany(APIView):
 class Recommendations(APIView):
     """
     
-    Получение рекомендаций из новостей по тикету
+    Получение рекомендаций из новостей по тикеру
 
     Parameters
     ----------
@@ -921,7 +924,7 @@ class Recommendations(APIView):
     permission_classes = [AllowAny, ]
 
     def get(self, request, ticker):
-        r = response_sample.copy()
+        r = get_response_sample()
         data = services.get_recommendations(r, ticker)
         return Response(data)
 
@@ -936,7 +939,7 @@ class Recommendations(APIView):
 class RecommendationsInDays(APIView):
     """
     
-    Получение ремомендаций из новостей по тикету и дате
+    Получение ремомендаций из новостей по тикеру и дате
 
     Parameters
     ----------
@@ -947,7 +950,7 @@ class RecommendationsInDays(APIView):
     permission_classes = [AllowAny, ]
 
     def get(self, request, ticker, days=10):
-        r = response_sample.copy()
+        r = get_response_sample()
         data = services.get_recommendations_days(r, ticker, days)
         return Response(data)
 
@@ -962,7 +965,7 @@ class RecommendationsInDays(APIView):
 class MajorHolders(APIView):
     """
     
-    Получение информации об акции по тикету
+    Получение информации об акции по тикеру
 
     Parameters
     ----------
@@ -973,7 +976,7 @@ class MajorHolders(APIView):
     permission_classes = [AllowAny, ]
 
     def get(self, request, ticker):
-        r = response_sample.copy()
+        r = get_response_sample()
         data = services.get_major_holders(r, ticker)
         return Response(data)
 

@@ -62,6 +62,10 @@ def get_insiders(response: dict, company_name: str, days: int) -> dict:
     response['payload'] = data
     response['total'] = len(data)
 
+    if response['total'] == 0:
+        response['code'] = 204
+        response['detail'] = 'no data for ticker. accepted only NA companies'
+
     return response
 
 
@@ -170,20 +174,12 @@ def get_news_company(r: dict, ticker: str, days: int) -> dict:
                 for item in response:
                     if item['summary'] == '':  # фильтр пустых новостей
                         continue
+                    else:
+                        data.append(item)
 
-                    kit = {
-                        'source': item['source'],
-                        'category': item['category'],
-                        'related': item['related'],
-                        'utc': datetime.utcfromtimestamp(item['datetime']),
-                        'summary': item['summary'],
-                        'image': item['image'],
-                        'url': item['url'],
-                    }
-                    data.append(kit)
-
-                r['payload'] = sorted(data, key=lambda item: item['utc'], reverse=True)
+                r['payload'] = sorted(data, key=lambda item: item['datetime'], reverse=True)
                 r['total'] = len(data)
+
             break
 
     return r
@@ -193,11 +189,13 @@ def get_recommendations(r: dict, ticker: str):
     tick = yf.Ticker(ticker)
     data = tick.recommendations
     data_json = []
+
     if data is not None:
         col1 = data.columns.values[0]
         col2 = data.columns.values[1]
         col3 = data.columns.values[2]
         col4 = data.columns.values[3]
+
         for index in reversed(data.index):
             res = {
                 'date': index.value // 10 ** 9,
@@ -207,9 +205,11 @@ def get_recommendations(r: dict, ticker: str):
                 'action': data.loc[index, col4]
             }
             data_json.append(res)
+
     else:
         r['code'] = 400
         r['detail'] = 'no data'
+
     r['payload'] = data_json
     r['total'] = len(r['payload'])
 
@@ -222,11 +222,13 @@ def get_recommendations_days(r: dict, ticker: str, days: int):
     data_json = []
     date_r = datetime.today().replace(hour=0, minute=0, second=0) - timedelta(days=days)
     date_r = date_r.timestamp()
+
     if data is not None:
         col1 = data.columns.values[0]
         col2 = data.columns.values[1]
         col3 = data.columns.values[2]
         col4 = data.columns.values[3]
+
         for index in reversed(data.index):
             if (index.value // 10 ** 9) > date_r:
                 res = {
@@ -239,11 +241,14 @@ def get_recommendations_days(r: dict, ticker: str, days: int):
                 data_json.append(res)
             else:
                 break
+
     else:
         r['code'] = 400
         r['detail'] = 'no data'
+
     r['payload'] = data_json
     r['total'] = len(r['payload'])
+
     return r
 
 
@@ -251,12 +256,14 @@ def get_major_holders(r: dict, ticker: str):
     tick = yf.Ticker(ticker)
     data = tick.institutional_holders
     data_json = []
+
     if data is not None:
         col1 = data.columns.values[0]
         col2 = data.columns.values[1]
         col3 = data.columns.values[2]
         col4 = data.columns.values[3]
         col5 = data.columns.values[4]
+
         for index in data.index:
             res = {
                 'holder': data.loc[index, col1],
@@ -269,6 +276,7 @@ def get_major_holders(r: dict, ticker: str):
     else:
         r['code'] = 400
         r['detail'] = 'no data'
+
     r['payload'] = data_json
     r['total'] = len(r['payload'])
 
